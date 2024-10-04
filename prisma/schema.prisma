@@ -9,3 +9,51 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("USER")
+  Seller      Seller?
+  Buyer       Buyer?
+  Deliverer   Deliverer?
+  Admin       Admin?
+  permissions Permission[]
+}
+
+model Seller {
+  id       Int    @id @default(autoincrement())
+  userId   Int    @unique
+  user     User   @relation(fields: [userId], references: [id])
+  shopName String
+}
+
+model Buyer {
+  id      Int    @id @default(autoincrement())
+  userId  Int    @unique
+  user    User   @relation(fields: [userId], references: [id])
+  address String
+}
+
+model Deliverer {
+  id      Int    @id @default(autoincrement())
+  userId  Int    @unique
+  user    User   @relation(fields: [userId], references: [id])
+  vehicle String
+}
+
+model Admin {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+  //permissions String  //comma separated values like (read, write)
+}
+
+model Permission {
+  id     Int    @id @default(autoincrement())
+  name   String // Define permission names
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+}
