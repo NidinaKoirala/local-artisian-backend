@@ -1,7 +1,7 @@
 import express from "express";
 import session from "express-session";
 import fs from "fs";
-import db from "../database/database.js";
+import db from "../prisma/database.js";
 import passport from "../passport/passportConfig.js";
 import bcrypt from "bcryptjs";
 import path from "path";
@@ -9,11 +9,8 @@ import path from "path";
 const app = express();
 app.set("view engine", "ejs");
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const schemaPath = path.join(__dirname, '../database/schema.sql');
-const schema = fs.readFileSync(
-  schemaPath,
-  "utf8"
-);
+const schemaPath = path.join(__dirname, "../prisma/schema.sql");
+const schema = fs.readFileSync(schemaPath, "utf8");
 db.exec(schema);
 
 app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
@@ -32,7 +29,7 @@ app.get("/log-out", (req, res, next) => {
 });
 
 const insertUserStmt = db.prepare(
-  "INSERT INTO users (username, password) VALUES (?, ?)"
+  "INSERT INTO User (username,email, password) VALUES (?, ?, ?)"
 );
 
 //using bcrypt
@@ -44,7 +41,7 @@ app.post("/sign-up", (req, res, next) => {
       }
 
       try {
-        insertUserStmt.run(req.body.username, hashedPassword);
+        insertUserStmt.run(req.body.username, req.body.email, hashedPassword);
         res.redirect("/");
       } catch (err) {
         return next(err);
