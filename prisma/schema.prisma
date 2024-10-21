@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//careful, table uses uppercase but role uses lowercase first letter
 model User {
   id          Int          @id @default(autoincrement())
   username    String
