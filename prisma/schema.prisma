@@ -15,7 +15,7 @@ model User {
   name        String
   email       String       @unique
   password    String
-  role        String       @default("USER")
+  role        String       @default("user")
   Seller      Seller?
   Buyer       Buyer?
   Deliverer   Deliverer?
@@ -52,6 +52,7 @@ model Admin {
 }
 
 model Permission {
+  //see_item, post_item, comment, chat, buy, give_perm, remove_user, warn, blacklist
   id     Int    @id @default(autoincrement())
   name   String // Define permission names
   userId Int
