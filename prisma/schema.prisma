@@ -16,7 +16,7 @@ model User {
   username    String
   email       String       @unique
   password    String
-  role        String       @default("User")
+  role        String       @default("user")
   Seller      Seller?
   Buyer       Buyer?
   Deliverer   Deliverer?

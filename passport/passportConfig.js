@@ -3,19 +3,19 @@ import {Strategy as LocalStrategy} from "passport-local";
 import db from "../prisma/database.js";
 import bcrypt from "bcryptjs";
 
-const getUserByUsernameStmt = db.prepare('SELECT * FROM User WHERE username = ?');
+const getUserByEmailStmt = db.prepare('SELECT * FROM User WHERE email = ?');
 
 passport.use(
     //telling Passport to use the LocalStrategy for authentication.
-  // new LocalStrategy({ usernameField: 'email', passwordField: 'password' },//email as username
+  new LocalStrategy({ usernameField: 'email', passwordField: 'password' },//email instead of username
     //verification logic here
-    async (username, password, done) => {
+    async (email, password, done) => {
     try {
       // Run the prepared statement to get the user
-      const user = getUserByUsernameStmt.get(username);
+      const user = getUserByEmailStmt.get(email);
 
       if (!user) {
-        return done(null, false, { message: "Incorrect username" });
+        return done(null, false, { message: "Incorrect email" });
       }
       
       const match = await bcrypt.compare(password, user.password);
@@ -27,7 +27,7 @@ passport.use(
       return done(err);
     }
   })
-// );
+);
 
 //Stores the user id in the session.
 passport.serializeUser((user, done) => {
