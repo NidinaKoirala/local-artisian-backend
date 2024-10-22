@@ -7,7 +7,9 @@ const getUserByUsernameStmt = db.prepare('SELECT * FROM User WHERE username = ?'
 
 passport.use(
     //telling Passport to use the LocalStrategy for authentication.
-  new LocalStrategy(async (username, password, done) => {
+  // new LocalStrategy({ usernameField: 'email', passwordField: 'password' },//email as username
+    //verification logic here
+    async (username, password, done) => {
     try {
       // Run the prepared statement to get the user
       const user = getUserByUsernameStmt.get(username);
@@ -25,7 +27,7 @@ passport.use(
       return done(err);
     }
   })
-);
+// );
 
 //Stores the user id in the session.
 passport.serializeUser((user, done) => {

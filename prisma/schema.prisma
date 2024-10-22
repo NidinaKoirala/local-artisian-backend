@@ -10,13 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//careful, table uses uppercase but role uses lowercase first letter
+//careful, uppercase first letters
 model User {
   id          Int          @id @default(autoincrement())
   username    String
   email       String       @unique
   password    String
-  role        String       @default("user")
+  role        String       @default("User")
   Seller      Seller?
   Buyer       Buyer?
   Deliverer   Deliverer?
@@ -27,13 +27,16 @@ model User {
 model Seller {
   id       Int    @id @default(autoincrement())
   userId   Int    @unique
+  email    String @unique
   user     User   @relation(fields: [userId], references: [id])
   shopName String
+  address  String
 }
 
 model Buyer {
   id      Int    @id @default(autoincrement())
   userId  Int    @unique
+  email   String @unique
   user    User   @relation(fields: [userId], references: [id])
   address String
 }
@@ -41,15 +44,16 @@ model Buyer {
 model Deliverer {
   id      Int    @id @default(autoincrement())
   userId  Int    @unique
+  email   String @unique
   user    User   @relation(fields: [userId], references: [id])
   vehicle String
 }
 
 model Admin {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
-  //permissions String  //comma separated values like (read, write)
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique
+  email  String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Permission {
