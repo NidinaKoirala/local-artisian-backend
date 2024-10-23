@@ -154,12 +154,12 @@ const usersData = [
   //Add more users as needed
 ];
 
-async function main() {
-  await upsertUsers(usersData);
+async function addUsers(params = usersData) {//uses usersData by default if params not given
+  await upsertUsers(params);
   console.log("Users upserted successfully.");
 }
 
-main()
+addUsers()
   .catch((e) => {
     console.error(e);
   })
