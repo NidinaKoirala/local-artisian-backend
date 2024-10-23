@@ -7,6 +7,7 @@
 <body>
     <% if (user) {%>
         <h1>WELCOME BACK <%= user.username %></h1>
+        <h3><%= JSON.stringify(req.user) %></h3>
         <a href="/log-out">LOG OUT</a>
       <% } else { %>
         <h1>please log in</h1>

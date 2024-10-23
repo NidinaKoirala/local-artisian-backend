@@ -1,24 +1,19 @@
 import express from "express";
 import session from "express-session";
-import fs from "fs";
 import db from "../prisma/database.js";
 import passport from "../passport/passportConfig.js";
 import bcrypt from "bcryptjs";
-import path from "path";
 const PORT = 5173;
 
 const app = express();
 app.set("view engine", "ejs");
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const schemaPath = path.join(__dirname, "../prisma/schema.sql");
-const schema = fs.readFileSync(schemaPath, "utf8");
-db.exec(schema);
 
 app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-app.get("/", (req, res) => res.render("index", { user: req.user }));
+app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 app.get("/log-out", (req, res, next) => {
   req.logout((err) => {

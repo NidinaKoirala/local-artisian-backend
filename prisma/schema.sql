@@ -1,5 +1,0 @@
-CREATE TABLE IF NOT EXISTS User (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT,
-  password TEXT
-);
