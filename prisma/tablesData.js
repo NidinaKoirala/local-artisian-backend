@@ -122,39 +122,39 @@ async function upsertUsers(usersData) {
   }
 }
 
-async function main() {
-  const usersData = [
-    {
-      username: "seller1",
-      email: "seller1@example.com",
-      password: "password1",
-      shopName: "seller1shop",
-      address: "seller1address",
-      role: "seller",
-    },
-    {
-      username: "buyer1",
-      email: "buyer1@example.com",
-      password: "password2",
-      address: "buyer1address",
-      role: "buyer",
-    },
-    {
-      username: "deliverer1",
-      email: "deliverer1@example.com",
-      password: "password3",
-      vehicle: "vehicle1",
-      role: "deliverer",
-    },
-    {
-      username: "admin1",
-      email: "admin1@example.com",
-      password: "password4",
-      role: "admin",
-    },
-    //Add more users as needed
-  ];
+const usersData = [
+  {
+    username: "seller1",
+    email: "seller1@example.com",
+    password: "password1",
+    shopName: "seller1shop",
+    address: "seller1address",
+    role: "seller",
+  },
+  {
+    username: "buyer1",
+    email: "buyer1@example.com",
+    password: "password2",
+    address: "buyer1address",
+    role: "buyer",
+  },
+  {
+    username: "deliverer1",
+    email: "deliverer1@example.com",
+    password: "password3",
+    vehicle: "vehicle1",
+    role: "deliverer",
+  },
+  {
+    username: "admin1",
+    email: "admin1@example.com",
+    password: "password4",
+    role: "admin",
+  },
+  //Add more users as needed
+];
 
+async function main() {
   await upsertUsers(usersData);
   console.log("Users upserted successfully.");
 }

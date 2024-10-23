@@ -5,6 +5,7 @@ import db from "../prisma/database.js";
 import passport from "../passport/passportConfig.js";
 import bcrypt from "bcryptjs";
 import path from "path";
+const PORT = 5173;
 
 const app = express();
 app.set("view engine", "ejs");
@@ -60,4 +61,4 @@ app.post(
   })
 );
 
-app.listen(5173, () => console.log("app listening on port 5173"));
+app.listen(PORT, () => console.log(`app listening on port ${PORT}`));
