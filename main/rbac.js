@@ -18,11 +18,12 @@ async function fillUsersValue() {
     }
 }
 
-function hasPermission(userId, action) {
+export function hasPermission(userId, action) {
     const user = users.find(u => u.id === userId);
     
     if (!user) {
-        return false; // User not found
+        console.log('user not found')
+        return false; 
     }
 
     const permissions = rolesPermissions[user.role];
@@ -30,9 +31,9 @@ function hasPermission(userId, action) {
     return permissions && permissions.includes(action);
 }
 
-function authPage(permissions){
+export default function authorize(permissions){
     return function (req,res,next){
-        const userRole = req.body.role;
+        const userRole = req.user.role;
         if (permissions.includes(userRole)){
             next()
         }
@@ -47,4 +48,4 @@ async function main(){
     console.log(hasPermission(7, 'see_item'));
 }
 
-main();
+// main();

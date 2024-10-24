@@ -15,7 +15,9 @@ app.use(express.json());
 
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
-app.get("/log-out", (req, res, next) => {
+
+
+app.post("/log-out", (req, res, next) => {
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -27,7 +29,6 @@ app.get("/log-out", (req, res, next) => {
 const insertUserStmt = db.prepare(
   "INSERT INTO User (username,email, password) VALUES (?, ?, ?)"
 );
-
 //using bcrypt
 app.post("/sign-up", (req, res, next) => {
   try {

@@ -5,20 +5,28 @@
   <title></title>
 </head>
 <body>
-    <% if (user) {%>
-        <h1>WELCOME BACK <%= user.username %></h1>
-        <h3><%= JSON.stringify(req.user) %></h3>
-        <a href="/log-out">LOG OUT</a>
-      <% } else { %>
-        <h1>please log in</h1>
-        <form action="/log-in" method="POST">
-          <label for="email">Email</label>
-          <input id="email" name="email" placeholder="email@example.com" type="email" />
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" />
-          <button>Log In</button>
-          <a href="/sign-up">sign up</a>
-        </form>
-      <%}%>
+  <% if (user) { %>
+    <h1>WELCOME BACK <%= user.username %></h1>
+    <h3><%= JSON.stringify(req.user) %></h3>
+    
+    <!-- Logout Form -->
+    <form action="/log-out" method="POST" style="display: inline;">
+        <button type="submit">LOG OUT</button>
+    </form>
+    
+<% } else { %>
+    <h1>Please log in</h1>
+    <form action="/log-in" method="POST">
+        <label for="email">Email</label>
+        <input id="email" name="email" placeholder="email@example.com" type="email" required />
+        
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+        
+        <button>Log In</button>
+        <a href="/sign-up">Sign Up</a>
+    </form>
+<% } %>
+
 </body>
 </html>
