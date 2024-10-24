@@ -159,6 +159,22 @@ async function addUsers(params = usersData) {//uses usersData by default if para
   console.log("Users upserted successfully.");
 }
 
+async function getUsers(){
+  try {
+    // Fetch all users from the User model
+    const allUsers = await prisma.user.findMany();
+    
+    // Return users as an object
+    return { users: allUsers };
+} catch (error) {
+    console.error("Error fetching users:", error);
+    throw new Error("Could not fetch users"); // Re-throwing for further handling if needed
+} finally {
+    // Disconnect from the database
+    await prisma.$disconnect();
+}
+}
+
 addUsers()
   .catch((e) => {
     console.error(e);
@@ -166,3 +182,13 @@ addUsers()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+getUsers()
+.then(result => {
+    console.log(result); // Logs the users as an object
+})
+.catch(error => {
+    console.error("Error fetching users:", error); // Handle any errors
+});
+
+export default getUsers;
