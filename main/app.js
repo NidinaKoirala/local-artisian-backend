@@ -3,6 +3,7 @@ import session from "express-session";
 import db from "../prisma/database.js";
 import passport from "../passport/passportConfig.js";
 import bcrypt from "bcryptjs";
+import authorize from "./rbac.js";
 const PORT = 5173;
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
+app.get("/books", authorize(['see_item', 'chat']), (req,res)=> res.json({name:'harry potter'}));
 
 app.post("/log-out", (req, res, next) => {
   req.logout((err) => {

@@ -31,10 +31,12 @@ export function hasPermission(userId, action) {
     return permissions && permissions.includes(action);
 }
 
-export default function authorize(permissions){
+export default function authorize(actions){
     return function (req,res,next){
         const userRole = req.user.role;
-        if (permissions.includes(userRole)){
+        const permissions = rolesPermissions[userRole];
+        //checks if the role has all the actions required
+        if (actions.every(action => permissions.includes(action))){
             next()
         }
         else{
