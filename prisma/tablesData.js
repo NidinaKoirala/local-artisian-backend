@@ -175,20 +175,14 @@ async function getUsers(){
 }
 }
 
-addUsers()
-  .catch((e) => {
-    console.error(e);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+//commented so it doesn't run everytime something from here gets imported
+// addUsers()
+//   .catch((e) => {
+//     console.error(e);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
 
-getUsers()
-.then(result => {
-    console.log(result); // Logs the users as an object
-})
-.catch(error => {
-    console.error("Error fetching users:", error); // Handle any errors
-});
 
 export default getUsers;

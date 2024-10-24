@@ -1,4 +1,4 @@
-import getUsers from "../prisma/tablesData";
+import getUsers from "../prisma/tablesData.js";
 let users;
 
 const rolesPermissions = {
@@ -11,13 +11,12 @@ const rolesPermissions = {
 
 async function fillUsersValue() {
     try {
-        const users = await getUsers(); // Now 'users' contains the fetched users object
+        const result = await getUsers(); 
+        users = result.users;// Now 'users' contains the fetched object's users array
     } catch (error) {
         console.error("Error fetching users:", error);
     }
 }
-
-fillUsersValue();
 
 function hasPermission(userId, action) {
     const user = users.find(u => u.id === userId);
@@ -43,3 +42,9 @@ function authPage(permissions){
     }
 }
 
+async function main(){
+    await fillUsersValue();
+    console.log(hasPermission(7, 'see_item'));
+}
+
+main();
