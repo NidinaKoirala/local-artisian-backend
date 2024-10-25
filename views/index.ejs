@@ -10,13 +10,13 @@
     <h3><%= JSON.stringify(req.user) %></h3>
     
     <!-- Logout Form -->
-    <form action="/log-out" method="POST" style="display: inline;">
+    <form action="/auth/log-out" method="POST" style="display: inline;">
         <button type="submit">LOG OUT</button>
     </form>
     
 <% } else { %>
     <h1>Please log in</h1>
-    <form action="/log-in" method="POST">
+    <form action="/auth/log-in" method="POST">
         <label for="email">Email</label>
         <input id="email" name="email" placeholder="email@example.com" type="email" required />
         
@@ -24,7 +24,7 @@
         <input id="password" name="password" type="password" required />
         
         <button>Log In</button>
-        <a href="/sign-up">Sign Up</a>
+        <a href="/auth/sign-up">Sign Up</a>
     </form>
 <% } %>
 
