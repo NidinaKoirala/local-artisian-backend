@@ -73,14 +73,44 @@ async function insertItems(itemsData){
     }
 }
 
+//new value of a field in the item of given id
+async function updateItem(id, field, value){
+    try {
+        // Check if the item exists
+        const existingItem = await prisma.item.findUnique({
+            where: { id },
+        });
+
+        if (!existingItem) {
+            console.log(`Item with ID ${id} does not exist.`);
+            return;
+        }
+
+        // Prepare data for update
+        const dataToUpdate = {};
+        dataToUpdate[field] = value; // Dynamically set the field to update
+
+        // Update the item
+        const updatedItem = await prisma.item.update({
+            where: { id },
+            data: dataToUpdate,
+        });
+
+        console.log('Item updated successfully:', updatedItem);
+    } catch (error) {
+        console.log("error updating items", error)
+    }
+}
+
 async function addItems(params = itemsData) {
     await insertItems(params);
 }
 
-addItems()
-  .catch((e) => {
-    console.error(e);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+updateItem(1, "photoUrl", "heheboi");
+// addItems()
+//   .catch((e) => {
+//     console.error(e);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
