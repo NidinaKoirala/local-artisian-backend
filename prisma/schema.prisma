@@ -12,16 +12,19 @@ datasource db {
 
 //careful, uppercase first letters
 model User {
-  id          Int          @id @default(autoincrement())
-  username    String
-  email       String       @unique
-  password    String
-  role        String       @default("user")
-  Seller      Seller?
-  Buyer       Buyer?
-  Deliverer   Deliverer?
-  Admin       Admin?
-  permissions Permission[]
+  id               Int        @id @default(autoincrement())
+  username         String
+  email            String     @unique
+  password         String
+  role             String     @default("user")
+  Seller           Seller?
+  Buyer            Buyer?
+  Deliverer        Deliverer?
+  Admin            Admin?
+  Rating           Rating[]
+  Comment          Comment[]
+  sentMessages     Message[]  @relation("Sender")
+  receivedMessages Message[]  @relation("Receiver")
 }
 
 model Seller {
@@ -31,6 +34,7 @@ model Seller {
   user     User   @relation(fields: [userId], references: [id])
   shopName String
   address  String
+  Item     Item[]
 }
 
 model Buyer {
@@ -54,12 +58,49 @@ model Admin {
   userId Int    @unique
   email  String @unique
   user   User   @relation(fields: [userId], references: [id])
+  Item   Item[]
 }
 
-model Permission {
-  //see_item, post_item, comment, chat, buy, give_perm, remove_user, warn, blacklist
-  id     Int    @id @default(autoincrement())
-  name   String // Define permission names
+model Item {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  rating      Float?
+  photoUrl    String?
+  category    String
+  inStock     Int
+  sellerId    Int?
+  adminId     Int?
+  seller      Seller?   @relation(fields: [sellerId], references: [id])
+  admin       Admin?    @relation(fields: [adminId], references: [id])
+  Rating      Rating[]
+  Comment     Comment[]
+}
+
+model Rating {
+  id     Int   @id @default(autoincrement())
+  value  Float // Rating value (e.g., from 1 to 5)
   userId Int
-  user   User   @relation(fields: [userId], references: [id])
+  itemId Int
+  user   User  @relation(fields: [userId], references: [id])
+  item   Item  @relation(fields: [itemId], references: [id])
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  content String // The comment text
+  userId  Int
+  itemId  Int
+  user    User   @relation(fields: [userId], references: [id])
+  item    Item   @relation(fields: [itemId], references: [id])
+}
+
+model Message {
+  id         Int    @id @default(autoincrement())
+  content    String // The message text
+  senderId   Int
+  receiverId Int
+  sender     User   @relation("Sender", fields: [senderId], references: [id])
+  receiver   User   @relation("Receiver", fields: [receiverId], references: [id])
 }
