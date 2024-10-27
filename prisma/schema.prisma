@@ -67,7 +67,7 @@ model Item {
   description String
   price       Float
   rating      Float?
-  photoUrl    String?
+  photos      Photo[]
   category    String
   inStock     Int
   sellerId    Int?
@@ -103,4 +103,11 @@ model Message {
   receiverId Int
   sender     User   @relation("Sender", fields: [senderId], references: [id])
   receiver   User   @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model Photo {
+  id     Int    @id @default(autoincrement())
+  url    String 
+  itemId Int    
+  item   Item   @relation(fields: [itemId], references: [id]) 
 }

@@ -9,7 +9,7 @@ const itemsData = [
     description: "High-quality bags made of marijuana.",
     price: 89.99,
     rating: 4.5,
-    photoUrl: "https://example.com/images/bag.jpg",
+    photos: [{ url: "url1" }, { url: "url2" }],
     category: "accessories",
     inStock: 25,
     sellerId: 1,
@@ -20,7 +20,7 @@ const itemsData = [
     description: "Portable thanka painting with excellent quality.",
     price: 49.99,
     rating: 4.2,
-    photoUrl: "https://example.com/images/thanka.jpg",
+    photos: [{ url: "url3" }],
     category: "handmade",
     inStock: 50,
     sellerId: 1,
@@ -31,7 +31,15 @@ const itemsData = [
     description: "Reflects the culture of Nepal.",
     price: 29.99,
     rating: 4.7,
-    photoUrl: "https://example.com/images/dhaka.jpg",
+    photos: [
+      { url: "url1" },
+      { url: "url1" },
+      { url: "url1" },
+      { url: "url1" },
+      { url: "url1" },
+      { url: "url1" },
+      { url: "url1" },
+    ],
     category: "handmade",
     inStock: 15,
     sellerId: 2,
@@ -42,7 +50,7 @@ const itemsData = [
     description: "Organic taste from the Karnali.",
     price: 79.99,
     rating: 4.3,
-    photoUrl: "https://example.com/images/achar.jpg",
+    photos: [{ url: "url1" }, { url: "url2" }],
     category: "edible",
     inStock: 10,
     adminId: 1, // Admin posted this item
@@ -53,7 +61,7 @@ const itemsData = [
     description: "Nepali bangles that make you bangable.",
     price: 19.99,
     rating: null, // No ratings yet
-    photoUrl: "https://example.com/images/bangles.jpg",
+    photos: [{ url: "url1" }, { url: "url2" }],
     category: "accessories",
     inStock: 30,
     sellerId: 1,
@@ -61,56 +69,61 @@ const itemsData = [
 ];
 
 //simple add not upsert
-async function insertItems(itemsData){
+async function insertItems(itemsData) {
     try {
-        const createdItems = await prisma.item.createMany({
-            data: itemsData,
-        });
+        // Create items one by one to get their IDs
+        for (const item of itemsData) {
+            const createdItem = await prisma.item.create({
+                data: {
+                    title: item.title,
+                    description: item.description,
+                    price: item.price,
+                    rating: item.rating,
+                    category: item.category,
+                    inStock: item.inStock,
+                    sellerId: item.sellerId,
+                },
+            });
 
-        console.log('Items added successfully:', createdItems);
+            // Insert associated photos
+            await prisma.photo.createMany({
+                data: item.photos.map(photo => ({
+                    url: photo.url,
+                    itemId: createdItem.id, // Associate photo with the correct item ID
+                })),
+            });
+        }
+        console.log('Items added successfully');
     } catch (error) {
-        console.log("error upserting items: ", error);
+        console.log("Error inserting items:", error);
     }
 }
 
 //new value of a field in the item of given id
-async function updateItem(id, field, value){
-    try {
-        // Check if the item exists
-        const existingItem = await prisma.item.findUnique({
-            where: { id },
-        });
+async function updateItem(id, field, value) {
+  try {
+    // Check if the item exists
+    const existingItem = await prisma.item.findUnique({
+      where: { id },
+    });
 
-        if (!existingItem) {
-            console.log(`Item with ID ${id} does not exist.`);
-            return;
-        }
-
-        // Prepare data for update
-        const dataToUpdate = {};
-        dataToUpdate[field] = value; // Dynamically set the field to update
-
-        // Update the item
-        const updatedItem = await prisma.item.update({
-            where: { id },
-            data: dataToUpdate,
-        });
-
-        console.log('Item updated successfully:', updatedItem);
-    } catch (error) {
-        console.log("error updating items", error)
+    if (!existingItem) {
+      console.log(`Item with ID ${id} does not exist.`);
+      return;
     }
-}
 
-async function addItems(params = itemsData) {
-    await insertItems(params);
-}
+    // Prepare data for update
+    const dataToUpdate = {};
+    dataToUpdate[field] = value; // Dynamically set the field to update
 
-updateItem(1, "photoUrl", "heheboi");
-// addItems()
-//   .catch((e) => {
-//     console.error(e);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
+    // Update the item
+    const updatedItem = await prisma.item.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+
+    console.log("Item updated successfully:", updatedItem);
+  } catch (error) {
+    console.log("error updating items", error);
+  }
+}
