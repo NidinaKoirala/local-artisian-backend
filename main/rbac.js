@@ -1,11 +1,11 @@
-import getUsers from "../prisma/tablesData.js";
+import getUsers from "../prisma/usersData.js";
 let users;
 
 const rolesPermissions = {
     user: ['see_item'],
-    admin: ['see_item', 'post_item', 'comment', 'chat', 'buy', 'give_perm', 'remove_user', 'warn', 'blacklist'],
-    seller: ['see_item','post_item', 'comment', 'chat'],
-    buyer: ['see_item', 'comment', 'chat', 'buy'],
+    admin: ['see_item', 'post_item', 'remove_item', 'comment', 'chat', 'buy', 'give_perm', 'remove_user', 'warn', 'blacklist'],
+    seller: ['see_item','post_item', 'remove_item', 'comment', 'chat'],
+    buyer: ['see_item', 'comment', 'rate', 'chat', 'buy'],
     deliverer: ['see_item']
 };
 

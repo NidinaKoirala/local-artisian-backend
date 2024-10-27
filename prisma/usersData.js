@@ -132,6 +132,14 @@ const usersData = [
     role: "seller",
   },
   {
+    username: "seller2",
+    email: "seller2@example.com",
+    password: "seller2",
+    shopName: "seller2shop",
+    address: "seller2address",
+    role: "seller",
+  },
+  {
     username: "buyer1",
     email: "buyer1@example.com",
     password: "password2",
