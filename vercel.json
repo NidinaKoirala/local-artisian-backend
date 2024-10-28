@@ -4,6 +4,9 @@
     {
       "src": "main/app.js",
       "use": "@vercel/node"
+      "config": {
+        "includeFiles": ["views/**/*"]
+      }      
     }
   ],
   "routes": [
