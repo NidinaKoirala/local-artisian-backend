@@ -15,9 +15,9 @@ const insertUserStmt = db.prepare(
 router.post("/sign-up", (req, res, next) => {
   const { username, email, password } = req.body;
 
-  // Basic input validation to avoid undefined values
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
+  // Ensure input values are strings and not null/undefined
+  if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: "Invalid input types" });
   }
 
   try {
@@ -28,18 +28,28 @@ router.post("/sign-up", (req, res, next) => {
         return res.status(500).json({ error: "Error hashing password" });
       }
 
-      // Logging values for debugging, be careful not to log sensitive data in production
-      console.log("Inserting user with:", { username, email });
+      // Check the hashed password is of type string
+      if (typeof hashedPassword !== 'string') {
+        console.error("Hashed password is not a string:", hashedPassword);
+        return res.status(500).json({ error: "Error processing password" });
+      }
+
+      // Log types for debugging
+      console.log("Types:", {
+        username: typeof username,
+        email: typeof email,
+        hashedPassword: typeof hashedPassword
+      });
 
       try {
-        // Execute the insert statement with the callback function
+        // Execute the insert statement with callback to confirm insertion
         insertUserStmt.run(username, email, hashedPassword, function (err) {
           if (err) {
             console.error("Database insertion error:", err);
             return res.status(500).json({ error: "Error inserting user into database" });
           }
 
-          // Send success response only after confirming insertion
+          // Send success response only after insertion
           console.log("User registered successfully");
           res.status(201).json({ message: "User registered successfully" });
         });
