@@ -12,18 +12,24 @@ class Database {
     });
   }
 
-  // Mimic better-sqlite3 methods if necessary, such as `prepare` and `run`
+  // Mimic better-sqlite3 methods
   prepare(query) {
     return {
       run: async (...params) => {
         const result = await this.client.execute(query, params);
         return result;
       },
-      // Additional methods as needed, such as `all`, `get`, etc.
+      get: async (...params) => {
+        const result = await this.client.execute(query, params);
+        return result.rows[0]; // return the first row if it exists
+      },
+      all: async (...params) => {
+        const result = await this.client.execute(query, params);
+        return result.rows; // return all rows
+      },
     };
   }
 }
 
-// Use environment variables from OS or .env file
 const db = new Database(process.env.DATABASE_URL, process.env.AUTH_TOKEN);
 export default db;
