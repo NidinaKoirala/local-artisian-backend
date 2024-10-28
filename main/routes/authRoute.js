@@ -7,23 +7,30 @@ const router = express.Router();
 
 router.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
+// Prepared statement for inserting a new user
 const insertUserStmt = db.prepare(
   "INSERT INTO User (username, email, password) VALUES (?, ?, ?)"
 );
 
 router.post("/sign-up", (req, res, next) => {
   try {
+    // Hash the password
     bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
       if (err) {
         return res.status(500).json({ error: "Error hashing password" });
       }
 
-      try {
-        insertUserStmt.run(req.body.username, req.body.email, hashedPassword);
+      // Run the insert statement with callback to handle errors
+      insertUserStmt.run(req.body.username, req.body.email, hashedPassword, function (err) {
+        if (err) {
+          // If there's an error in insertion, respond with an error message
+          console.error("Database insertion error:", err);
+          return res.status(500).json({ error: "Error inserting user into database" });
+        }
+
+        // If no error, send a success message
         res.status(201).json({ message: "User registered successfully" });
-      } catch (err) {
-        res.status(500).json({ error: "Error inserting user into database" });
-      }
+      });
     });
   } catch (err) {
     return next(err);
