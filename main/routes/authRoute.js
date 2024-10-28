@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import db from "../../prisma/database.js";
+import db from "../../prisma/database.js"; // Points to Turso client setup
 import passport from "../../passport/passportConfig.js";
 
 const router = express.Router();
@@ -10,38 +10,25 @@ router.get("/sign-up", (req, res) => res.render("sign-up-form"));
 router.post("/sign-up", async (req, res, next) => {
   const { username, email, password } = req.body;
 
-  // Ensure input values are strings and not null/undefined
   if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
     return res.status(400).json({ error: "Invalid input types" });
   }
 
   try {
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Explicitly convert each value to a string to avoid hidden type issues
     const usernameStr = String(username);
     const emailStr = String(email);
     const hashedPasswordStr = String(hashedPassword);
 
-    // Log values and types for debugging
     console.log("Inserting user with values:", { usernameStr, emailStr, hashedPasswordStr });
-    console.log("Types:", {
-      username: typeof usernameStr,
-      email: typeof emailStr,
-      hashedPassword: typeof hashedPasswordStr
-    });
 
-    // Insert user into the database using Prisma
+    // Insert user data using Turso client
     try {
-      const newUser = await db.user.create({
-        data: {
-          username: usernameStr,
-          email: emailStr,
-          password: hashedPasswordStr
-        }
-      });
-      console.log("User registered successfully:", newUser);
+      await db.execute(
+        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)",
+        [usernameStr, emailStr, hashedPasswordStr]
+      );
+      console.log("User registered successfully");
       res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
       console.error("Database insertion error:", err);
