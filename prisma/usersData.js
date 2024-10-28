@@ -176,9 +176,7 @@ async function getUsers(){
     return { users: allUsers };
 } catch (error) {
     console.error("Error fetching users:", error);
-    throw new Error("Could not fetch users"); // Re-throwing for further handling if needed
 } finally {
-    // Disconnect from the database
     await prisma.$disconnect();
 }
 }
@@ -191,6 +189,5 @@ async function getUsers(){
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
-
 
 export default getUsers;

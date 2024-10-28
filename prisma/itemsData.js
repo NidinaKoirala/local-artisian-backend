@@ -160,3 +160,25 @@ async function updateItemPhotos(itemId, newPhotoUrls) {
       console.log("Error updating photos:", error);
   }
 }
+
+async function getItems(){
+  try {
+    // Fetch all items from the Item model
+    const allItems = await prisma.item.findMany(
+      {
+        include:{
+          photos: true,
+        }
+      }
+    );
+    
+    // Return items as an object
+    return { items: allItems };
+} catch (error) {
+    console.error("Error fetching items:", error);
+} finally {
+    await prisma.$disconnect();
+}
+}
+
+export default getItems;
