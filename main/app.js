@@ -1,6 +1,14 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Define __filename and __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Your existing code
 import express from "express";
 import session from "express-session";
-import cors from "cors"; // Import cors
+import cors from "cors";
 import passport from "../passport/passportConfig.js";
 import authorize from "./rbac.js";
 import authRoute from "./routes/authRoute.js";
