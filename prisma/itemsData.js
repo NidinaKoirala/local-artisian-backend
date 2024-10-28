@@ -127,3 +127,36 @@ async function updateItem(id, field, value) {
     console.log("error updating items", error);
   }
 }
+
+async function updateItemPhotos(itemId, newPhotoUrls) {
+  try {
+      const existingItem = await prisma.item.findUnique({
+          where: { id: itemId },
+          include: { photos: true }, // Include related photos
+      });
+
+      if (!existingItem) {
+          console.log(`Item with ID ${itemId} does not exist.`);
+          return;
+      }
+
+      // Clear existing photos
+      await prisma.photo.deleteMany({
+          where: { itemId: existingItem.id },
+      });
+
+      // Add new photo URLs
+      const newPhotos = newPhotoUrls.map(url => ({
+          url,
+          itemId: existingItem.id,
+      }));
+
+      await prisma.photo.createMany({
+          data: newPhotos,
+      });
+
+      console.log("Photos updated successfully for item ID:", itemId);
+  } catch (error) {
+      console.log("Error updating photos:", error);
+  }
+}
