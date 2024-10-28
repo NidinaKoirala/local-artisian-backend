@@ -32,15 +32,16 @@ router.post("/sign-up", async (req, res, next) => {
       hashedPassword: typeof hashedPasswordStr
     });
 
-    // Use async/await syntax to run the insert
+    // Insert user into the database using Prisma
     try {
-      await db.run(
-        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)",
-        usernameStr,
-        emailStr,
-        hashedPasswordStr
-      );
-      console.log("User registered successfully");
+      const newUser = await db.user.create({
+        data: {
+          username: usernameStr,
+          email: emailStr,
+          password: hashedPasswordStr
+        }
+      });
+      console.log("User registered successfully:", newUser);
       res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
       console.error("Database insertion error:", err);
