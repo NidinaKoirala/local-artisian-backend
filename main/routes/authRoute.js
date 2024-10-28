@@ -22,12 +22,13 @@ router.post("/sign-up", async (req, res, next) => {
 
     console.log("Inserting user with values:", { usernameStr, emailStr, hashedPasswordStr });
 
-    // Insert user data using Turso client
+    // Insert user data using Turso client with `prepare().run()`
     try {
-      await db.execute(
-        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)",
-        [usernameStr, emailStr, hashedPasswordStr]
+      const insertUserStmt = db.prepare(
+        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)"
       );
+      await insertUserStmt.run(usernameStr, emailStr, hashedPasswordStr);
+
       console.log("User registered successfully");
       res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
