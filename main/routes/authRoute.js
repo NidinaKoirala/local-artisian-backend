@@ -13,26 +13,43 @@ const insertUserStmt = db.prepare(
 );
 
 router.post("/sign-up", (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  // Basic input validation to avoid undefined values
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
   try {
     // Hash the password
-    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+    bcrypt.hash(password, 10, async (err, hashedPassword) => {
       if (err) {
+        console.error("Error hashing password:", err);
         return res.status(500).json({ error: "Error hashing password" });
       }
 
-      // Run the insert statement with callback to handle errors
-      insertUserStmt.run(req.body.username, req.body.email, hashedPassword, function (err) {
-        if (err) {
-          // If there's an error in insertion, respond with an error message
-          console.error("Database insertion error:", err);
-          return res.status(500).json({ error: "Error inserting user into database" });
-        }
+      // Logging values for debugging, be careful not to log sensitive data in production
+      console.log("Inserting user with:", { username, email });
 
-        // If no error, send a success message
-        res.status(201).json({ message: "User registered successfully" });
-      });
+      try {
+        // Execute the insert statement with the callback function
+        insertUserStmt.run(username, email, hashedPassword, function (err) {
+          if (err) {
+            console.error("Database insertion error:", err);
+            return res.status(500).json({ error: "Error inserting user into database" });
+          }
+
+          // Send success response only after confirming insertion
+          console.log("User registered successfully");
+          res.status(201).json({ message: "User registered successfully" });
+        });
+      } catch (err) {
+        console.error("Error executing statement:", err);
+        return res.status(500).json({ error: "Database execution error" });
+      }
     });
   } catch (err) {
+    console.error("Unexpected error:", err);
     return next(err);
   }
 });
