@@ -1,48 +1,35 @@
-import passport from "passport"
-import {Strategy as LocalStrategy} from "passport-local";
-import db from "../prisma/database.js";
-import bcrypt from "bcryptjs";
+import { config } from "dotenv";
+import { createClient } from "@libsql/client";
 
-const getUserByEmailStmt = db.prepare('SELECT * FROM User WHERE email = ?');
+// Load .env variables
+config();
 
-passport.use(
-    //telling Passport to use the LocalStrategy for authentication.
-  new LocalStrategy({ usernameField: 'email', passwordField: 'password' },//email instead of username
-    //verification logic here
-    async (email, password, done) => {
-    try {
-      // Run the prepared statement to get the user
-      const user = getUserByEmailStmt.get(email);
+class Database {
+  constructor(url, authToken) {
+    this.client = createClient({
+      url,
+      authToken,
+    });
+  }
 
-      if (!user) {
-        return done(null, false, { message: "Incorrect email" });
-      }
-      
-      const match = await bcrypt.compare(password, user.password);
-      if(!match){
-        return done(null, false, {message: "Incorrect password"});
-      }
-      return done(null, user);
-    } catch (err) {
-      return done(err);
-    }
-  })
-);
+  // Mimic better-sqlite3 methods
+  prepare(query) {
+    return {
+      run: async (...params) => {
+        const result = await this.client.execute(query, params);
+        return result;
+      },
+      get: async (...params) => {
+        const result = await this.client.execute(query, params);
+        return result.rows[0]; // return the first row if it exists
+      },
+      all: async (...params) => {
+        const result = await this.client.execute(query, params);
+        return result.rows; // return all rows
+      },
+    };
+  }
+}
 
-//Stores the user id in the session.
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-  });
-
-//Retrieves the user from the database based on the id and makes it available on req.user.
-  passport.deserializeUser((id, done) => {
-    try {
-      const user = db.prepare('SELECT * FROM User WHERE id = ?').get(id);
-      done(null, user);
-    } catch(err) {
-      done(err);
-    }
-  });
-  
-
-export default passport;
+const db = new Database(process.env.DATABASE_URL, process.env.AUTH_TOKEN);
+export default db;
