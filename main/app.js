@@ -16,6 +16,7 @@ app.use(cors({
   credentials: true, // Allows cookies and sessions to be sent with requests
 }));
 
+app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
 app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
