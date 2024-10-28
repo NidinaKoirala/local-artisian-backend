@@ -7,12 +7,7 @@ const router = express.Router();
 
 router.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
-// Prepared statement for inserting a new user
-const insertUserStmt = db.prepare(
-  "INSERT INTO User (username, email, password) VALUES (?, ?, ?)"
-);
-
-router.post("/sign-up", (req, res, next) => {
+router.post("/sign-up", async (req, res, next) => {
   const { username, email, password } = req.body;
 
   // Ensure input values are strings and not null/undefined
@@ -22,42 +17,35 @@ router.post("/sign-up", (req, res, next) => {
 
   try {
     // Hash the password
-    bcrypt.hash(password, 10, async (err, hashedPassword) => {
-      if (err) {
-        console.error("Error hashing password:", err);
-        return res.status(500).json({ error: "Error hashing password" });
-      }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Check the hashed password is of type string
-      if (typeof hashedPassword !== 'string') {
-        console.error("Hashed password is not a string:", hashedPassword);
-        return res.status(500).json({ error: "Error processing password" });
-      }
+    // Explicitly convert each value to a string to avoid hidden type issues
+    const usernameStr = String(username);
+    const emailStr = String(email);
+    const hashedPasswordStr = String(hashedPassword);
 
-      // Log types for debugging
-      console.log("Types:", {
-        username: typeof username,
-        email: typeof email,
-        hashedPassword: typeof hashedPassword
-      });
-
-      try {
-        // Execute the insert statement with callback to confirm insertion
-        insertUserStmt.run(username, email, hashedPassword, function (err) {
-          if (err) {
-            console.error("Database insertion error:", err);
-            return res.status(500).json({ error: "Error inserting user into database" });
-          }
-
-          // Send success response only after insertion
-          console.log("User registered successfully");
-          res.status(201).json({ message: "User registered successfully" });
-        });
-      } catch (err) {
-        console.error("Error executing statement:", err);
-        return res.status(500).json({ error: "Database execution error" });
-      }
+    // Log values and types for debugging
+    console.log("Inserting user with values:", { usernameStr, emailStr, hashedPasswordStr });
+    console.log("Types:", {
+      username: typeof usernameStr,
+      email: typeof emailStr,
+      hashedPassword: typeof hashedPasswordStr
     });
+
+    // Use async/await syntax to run the insert
+    try {
+      await db.run(
+        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)",
+        usernameStr,
+        emailStr,
+        hashedPasswordStr
+      );
+      console.log("User registered successfully");
+      res.status(201).json({ message: "User registered successfully" });
+    } catch (err) {
+      console.error("Database insertion error:", err);
+      return res.status(500).json({ error: "Error inserting user into database" });
+    }
   } catch (err) {
     console.error("Unexpected error:", err);
     return next(err);
