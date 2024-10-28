@@ -20,7 +20,7 @@ const app = express();
 
 // Enable CORS for requests from your frontend origin
 app.use(cors({
-  origin: "http://localhost:5173", // Replace with your frontend's URL
+  origin: "https://nidinakoirala.github.io/Local-artisian-market-place", // Replace with your frontend's URL
   credentials: true, // Allows cookies and sessions to be sent with requests
 }));
 
