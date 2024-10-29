@@ -103,8 +103,8 @@ async function updateItemPhotos(itemId, newPhotoUrls) {
 async function getItems() {
   try {
     const getItemsQuery = `
-      SELECT items.*, photos.url AS photoUrl
-      FROM items
+      SELECT item.*, photos.url AS photoUrl
+      FROM item
       LEFT JOIN photos ON items.id = photos.itemId
     `;
     const result = await dbClient.execute(getItemsQuery);
