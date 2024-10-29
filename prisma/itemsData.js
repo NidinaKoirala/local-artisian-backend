@@ -81,14 +81,14 @@ async function updateItemPhotos(itemId, newPhotoUrls) {
   try {
     // Delete existing photos
     const deletePhotosQuery = `
-      DELETE FROM photos WHERE itemId = ?
+      DELETE FROM photo WHERE itemId = ?
     `;
     await dbClient.execute(deletePhotosQuery, [itemId]);
 
     // Add new photos
     for (const url of newPhotoUrls) {
       const insertPhotoQuery = `
-        INSERT INTO photos (url, itemId)
+        INSERT INTO photo (url, itemId)
         VALUES (?, ?)
       `;
       await dbClient.execute(insertPhotoQuery, [url, itemId]);
@@ -103,9 +103,9 @@ async function updateItemPhotos(itemId, newPhotoUrls) {
 async function getItems() {
   try {
     const getItemsQuery = `
-      SELECT item.*, photos.url AS photoUrl
+      SELECT item.*, photo.url AS photoUrl
       FROM item
-      LEFT JOIN photos ON items.id = photos.itemId
+      LEFT JOIN photo ON items.id = photo.itemId
     `;
     const result = await dbClient.execute(getItemsQuery);
 
