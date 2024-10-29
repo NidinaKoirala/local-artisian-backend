@@ -20,6 +20,7 @@ import authorize from "./rbac.js";
 import authRoute from "./routes/authRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import itemRoute from "./routes/itemRoute.js";
+import userRoute from "./routes/userRoute.js";
 
 const PORT = 80;
 const app = express();
@@ -50,6 +51,7 @@ app.use(express.json());
 app.use("/auth", authRoute);
 app.use("/admin", adminRoute);
 app.use("/", itemRoute);
+app.use("/users", userRoute);
 
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/books", authorize(['see_item', 'chat']), (req, res) => res.json({ name: 'harry potter' }));
