@@ -138,4 +138,4 @@ async function getItems() {
   }
 }
 
-export { insertItems, updateItem, updateItemPhotos, getItems };
+export default getItems;
