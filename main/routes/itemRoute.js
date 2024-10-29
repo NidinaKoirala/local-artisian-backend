@@ -54,7 +54,7 @@ router.get("/items", async (req, res) => {
 });
 
 // Route to get distinct categories
-router.get("/items/categories", async (req, res) => {
+router.get("/categories", async (req, res) => {
   try {
     const query = "SELECT DISTINCT category FROM item";
     const result = await dbClient.execute(query);
@@ -67,7 +67,7 @@ router.get("/items/categories", async (req, res) => {
 });
 
 // Route to get items by category
-router.get("/items/categories/:category", async (req, res) => {
+router.get("/categories/:category", async (req, res) => {
   const category = req.params.category;
   try {
     const query = "SELECT * FROM item WHERE category = ?";
