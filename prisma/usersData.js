@@ -1,193 +1,28 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs"; // Import bcrypt for password hashing
+import { createClient } from "@libsql/client";
+import { config } from "dotenv";
 
-const prisma = new PrismaClient();
+config(); // Load environment variables
 
-async function upsertUsers(usersData) {
-  for (const userData of usersData) {
-    try {
-      // Hash the password before storing it
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
+const dbClient = createClient({
+  url: process.env.DATABASE_URL,
+  authToken: process.env.AUTH_TOKEN,
+});
 
-      // Upsert the common User record
-      await prisma.user.upsert({
-        where: { email: userData.email },
-        update: {
-          username: userData.username,
-          password: hashedPassword,
-          role: userData.role,
-        },
-        create: {
-          username: userData.username,
-          email: userData.email,
-          password: hashedPassword,
-          role: userData.role,
-        },
-      });
 
-      // Use switch case to handle different roles
-      if (userData.role !== "user") {
-        switch (userData.role) {
-          case "seller":
-            await prisma.seller.upsert({
-              where: { email: userData.email }, // Assuming unique email
-              update: {
-                shopName: userData.shopName,
-                address: userData.address,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-              create: {
-                email: userData.email,
-                shopName: userData.shopName,
-                address: userData.address,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-            });
-            break;
+async function getUsers() {
+  try {
+    // Fetch all users from the 'user' table
+    const query = "SELECT * FROM user";
+    const result = await dbClient.execute(query);
 
-          case "buyer":
-            await prisma.buyer.upsert({
-              where: { email: userData.email },
-              update: {
-                address: userData.address,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-              create: {
-                email: userData.email,
-
-                address: userData.address,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-            });
-            break;
-
-          case "deliverer":
-            await prisma.deliverer.upsert({
-              where: { email: userData.email },
-              update: {
-                vehicle: userData.vehicle,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-              create: {
-                email: userData.email,
-                vehicle: userData.vehicle,
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-            });
-            break;
-
-          case "admin":
-            await prisma.admin.upsert({
-              where: { email: userData.email },
-              update: {
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-              create: {
-                email: userData.email,
-
-                user: {
-                  connect: { email: userData.email },
-                },
-              },
-            });
-            break;
-
-          default:
-            console.error(
-              `Unknown role ${userData.role} for email ${userData.email}`
-            );
-            break;
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Error upserting ${userData.role} ${userData.email}:`,
-        error
-      );
-    }
+    // Map the result rows to return as an object
+    const users = result.rows;
+    return { users };
+  } catch (error) {
+    console.error("Error fetching users:", error);
+  } finally {
+    // No explicit disconnect needed with dbClient, as it’s managed internally
   }
 }
-
-const usersData = [
-  {
-    username: "seller1",
-    email: "seller1@example.com",
-    password: "password1",
-    shopName: "seller1shop",
-    address: "seller1address",
-    role: "seller",
-  },
-  {
-    username: "seller2",
-    email: "seller2@example.com",
-    password: "seller2",
-    shopName: "seller2shop",
-    address: "seller2address",
-    role: "seller",
-  },
-  {
-    username: "buyer1",
-    email: "buyer1@example.com",
-    password: "password2",
-    address: "buyer1address",
-    role: "buyer",
-  },
-  {
-    username: "deliverer1",
-    email: "deliverer1@example.com",
-    password: "password3",
-    vehicle: "vehicle1",
-    role: "deliverer",
-  },
-  {
-    username: "admin1",
-    email: "admin1@example.com",
-    password: "password4",
-    role: "admin",
-  },
-  //Add more users as needed
-];
-
-async function addUsers(params = usersData) {//uses usersData by default if params not given
-  await upsertUsers(params);
-  console.log("Users upserted successfully.");
-}
-
-async function getUsers(){
-  try {
-    // Fetch all users from the User model
-    const allUsers = await prisma.user.findMany();
-    
-    // Return users as an object
-    return { users: allUsers };
-} catch (error) {
-    console.error("Error fetching users:", error);
-} finally {
-    await prisma.$disconnect();
-}
-}
-
-//commented so it doesn't run everytime something from here gets imported
-// addUsers()
-//   .catch((e) => {
-//     console.error(e);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
 
 export default getUsers;
