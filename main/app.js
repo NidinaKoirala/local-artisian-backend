@@ -7,6 +7,7 @@ const __dirname = dirname(__filename);
 
 const allowedOrigins = [
   "https://nidinakoirala.github.io",
+  "https://dinesh16adh.github.io",
   "http://localhost:5173"
 ];
 
