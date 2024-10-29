@@ -35,7 +35,7 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRoute);
 app.use("/admin", adminRoute);
-app.use("/items", itemRoute);
+app.use("/", itemRoute);
 
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/books", authorize(['see_item', 'chat']), (req, res) => res.json({ name: 'harry potter' }));
