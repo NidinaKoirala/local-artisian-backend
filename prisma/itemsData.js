@@ -105,7 +105,7 @@ async function getItems() {
     const getItemsQuery = `
       SELECT item.*, photo.url AS photoUrl
       FROM item
-      LEFT JOIN photo ON items.id = photo.itemId
+      LEFT JOIN photo ON item.id = photo.itemId
     `;
     const result = await dbClient.execute(getItemsQuery);
 
