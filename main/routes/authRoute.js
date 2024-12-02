@@ -8,26 +8,89 @@ const router = express.Router();
 router.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
 router.post("/sign-up", async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const {
+    firstName,
+    middleName,
+    lastName,
+    username,
+    email,
+    password,
+    phoneNumber,
+    addressLine1,
+    addressLine2,
+    city,
+    state,
+    postalCode,
+    country,
+  } = req.body;
 
-  if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+  // Validate required fields
+  if (
+    !firstName ||
+    !lastName ||
+    !username ||
+    !email ||
+    !password ||
+    !addressLine1 ||
+    !city ||
+    !state ||
+    !postalCode ||
+    !country
+  ) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  // Ensure email and username are strings
+  if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string") {
     return res.status(400).json({ error: "Invalid input types" });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const usernameStr = String(username);
-    const emailStr = String(email);
-    const hashedPasswordStr = String(hashedPassword);
 
-    console.log("Inserting user with values:", { usernameStr, emailStr, hashedPasswordStr });
+    // Prepare data for insertion
+    const userData = {
+      firstName,
+      middleName: middleName || null, // Optional field
+      lastName,
+      username,
+      email,
+      password: hashedPassword,
+      phoneNumber: phoneNumber || null, // Optional field
+      addressLine1,
+      addressLine2: addressLine2 || null, // Optional field
+      city,
+      state,
+      postalCode,
+      country,
+    };
+
+    console.log("Inserting user with values:", userData);
 
     // Insert user data using Turso client with `prepare().run()`
     try {
-      const insertUserStmt = db.prepare(
-        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)"
+      const insertUserStmt = db.prepare(`
+        INSERT INTO User (
+          firstName, middleName, lastName, username, email, password, phoneNumber, 
+          addressLine1, addressLine2, city, state, postalCode, country
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      await insertUserStmt.run(
+        userData.firstName,
+        userData.middleName,
+        userData.lastName,
+        userData.username,
+        userData.email,
+        userData.password,
+        userData.phoneNumber,
+        userData.addressLine1,
+        userData.addressLine2,
+        userData.city,
+        userData.state,
+        userData.postalCode,
+        userData.country
       );
-      await insertUserStmt.run(usernameStr, emailStr, hashedPasswordStr);
 
       console.log("User registered successfully");
       res.status(201).json({ message: "User registered successfully" });

@@ -21,6 +21,7 @@ import authRoute from "./routes/authRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import itemRoute from "./routes/itemRoute.js";
 import userRoute from "./routes/userRoute.js";
+import orderRoute from "./routes/orderRoute.js"
 
 const PORT = 80;
 const app = express();
@@ -52,7 +53,7 @@ app.use("/auth", authRoute);
 app.use("/admin", adminRoute);
 app.use("/", itemRoute);
 app.use("/users", userRoute);
-
+app.use ("/order", orderRoute);
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/books", authorize(['see_item', 'chat']), (req, res) => res.json({ name: 'harry potter' }));
 
