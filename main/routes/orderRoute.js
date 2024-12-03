@@ -160,6 +160,7 @@ router.get("/history/:userId", async (req, res) => {
           o.id AS orderId, 
           o.orderDate, 
           o.quantity, 
+          i.id AS itemId,
           i.title AS itemName, 
           i.price AS itemPrice, 
           i.category
