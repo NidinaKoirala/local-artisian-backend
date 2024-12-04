@@ -91,15 +91,23 @@ router.get("/categories/:category", async (req, res) => {
 });
 
 // Route to get a single item by ID with its associated photos
+// Route to get a single item by ID with its associated photos and average rating
 router.get("/items/:id", async (req, res) => {
   const id = Number(req.params.id);
+
   try {
     const query = `
-      SELECT item.*, photo.url AS photoUrl
+      SELECT 
+        item.*,
+        photo.url AS photoUrl,
+        IFNULL(AVG(Ratings.rating), 0) AS averageRating
       FROM item
       LEFT JOIN photo ON item.id = photo.itemId
+      LEFT JOIN Ratings ON item.id = Ratings.itemId
       WHERE item.id = ?
+      GROUP BY item.id, photo.url
     `;
+
     const result = await dbClient.execute(query, [id]);
 
     if (result.rows.length === 0) {
@@ -111,12 +119,12 @@ router.get("/items/:id", async (req, res) => {
       title: result.rows[0].title,
       description: result.rows[0].description,
       price: result.rows[0].price,
-      rating: result.rows[0].rating,
+      averageRating: result.rows[0].averageRating,
       category: result.rows[0].category,
       inStock: result.rows[0].inStock,
       sellerId: result.rows[0].sellerId,
       adminId: result.rows[0].adminId,
-      photos: result.rows.map(row => row.photoUrl ? { url: row.photoUrl } : null).filter(photo => photo)
+      photos: result.rows.map(row => (row.photoUrl ? { url: row.photoUrl } : null)).filter(photo => photo),
     };
 
     res.json(item);
@@ -125,6 +133,7 @@ router.get("/items/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch item" });
   }
 });
+
 
 // New Route: Get User Details
 router.get("/user/:id", async (req, res) => {
