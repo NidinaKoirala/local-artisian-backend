@@ -15,16 +15,23 @@ const router = Router();
 router.get("/items", async (req, res) => {
   try {
     const query = `
-      SELECT item.*, photo.url AS photoUrl, item.soldQuantity, item.discount
+      SELECT 
+        item.*,
+        photo.url AS photoUrl,
+        item.soldQuantity,
+        item.discount,
+        IFNULL(AVG(Ratings.rating), 0) AS averageRating
       FROM item
       LEFT JOIN photo ON item.id = photo.itemId
+      LEFT JOIN Ratings ON item.id = Ratings.itemId
+      GROUP BY item.id, photo.url
       ORDER BY item.soldQuantity DESC
     `;
     const result = await dbClient.execute(query);
 
     const itemsMap = {};
     result.rows.forEach((row) => {
-      const { id, title, description, price, rating, category, inStock, soldQuantity, discount, sellerId, adminId, photoUrl } = row;
+      const { id, title, description, price, averageRating, category, inStock, soldQuantity, discount, sellerId, adminId, photoUrl } = row;
 
       if (!itemsMap[id]) {
         itemsMap[id] = {
@@ -32,7 +39,7 @@ router.get("/items", async (req, res) => {
           title,
           description,
           price,
-          rating,
+          averageRating,
           category,
           inStock,
           soldQuantity,
