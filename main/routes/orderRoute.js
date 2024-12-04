@@ -187,5 +187,62 @@ router.get("/history/:userId", async (req, res) => {
       res.status(500).json({ error: "Failed to fetch order history. Please try again later." });
     }
   });
-  
+
+// API to fetch orders for a seller
+router.get("/forsellers", async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  try {
+    console.info(`Fetching seller ID for user ID: ${userId}`);
+
+    // Get seller ID from the user ID
+    const sellerResult = await dbClient.execute(
+      "SELECT id FROM Seller WHERE userId = ?",
+      [userId]
+    );
+
+    if (!sellerResult.rows.length) {
+      return res.status(404).json({ error: "Seller not found for this user" });
+    }
+
+    const sellerId = sellerResult.rows[0].id;
+    console.info(`Mapped user ID ${userId} to seller ID ${sellerId}`);
+
+    // Fetch orders for the seller
+    const ordersQuery = `
+      SELECT 
+        o.id AS orderId,
+        o.orderDate,
+        o.quantity,
+        u.firstName || ' ' || u.lastName AS customerName,
+        u.phoneNumber AS customerPhone,
+        i.title AS itemName,
+        i.price AS itemPrice,
+        o.quantity * i.price AS totalPrice
+      FROM orders o
+      JOIN item i ON o.itemId = i.id
+      JOIN User u ON o.userId = u.id
+      WHERE i.sellerId = ?
+      ORDER BY o.orderDate DESC
+    `;
+
+    console.info("Fetching orders for seller ID:", sellerId);
+    const ordersResult = await dbClient.execute(ordersQuery, [sellerId]);
+
+    if (!ordersResult.rows.length) {
+      console.info(`No orders found for seller ID ${sellerId}`);
+      return res.status(200).json({ orders: [], message: "No orders found" });
+    }
+
+    console.info(`Found ${ordersResult.rows.length} orders for seller ID ${sellerId}`);
+    res.status(200).json({ orders: ordersResult.rows });
+  } catch (error) {
+    console.error("Error fetching orders for sellers:", error.message);
+    res.status(500).json({ error: "Failed to fetch orders. Please try again later." });
+  }
+});
 export default router;

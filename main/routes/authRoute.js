@@ -14,6 +14,7 @@ router.post('/signup/user', async (req, res) => {
     username,
     email,
     password,
+    phoneNumber,
     address,
     city,
     state,
@@ -21,12 +22,14 @@ router.post('/signup/user', async (req, res) => {
     country,
   } = req.body;
 
+  // Validate required fields
   if (
     !firstName ||
     !lastName ||
     !username ||
     !email ||
     !password ||
+    !phoneNumber ||
     !address ||
     !city ||
     !state ||
@@ -41,8 +44,8 @@ router.post('/signup/user', async (req, res) => {
 
     // Insert into User table
     const insertUserStmt = db.prepare(`
-      INSERT INTO User (firstName, lastName, username, email, password, addressLine1, city, state, postalCode, country, role)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')
+      INSERT INTO User (firstName, lastName, username, email, password, phoneNumber, addressLine1, city, state, postalCode, country, role)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')
     `);
 
     const userResult = await insertUserStmt.run(
@@ -51,6 +54,7 @@ router.post('/signup/user', async (req, res) => {
       username,
       email,
       hashedPassword,
+      phoneNumber,
       address,
       city,
       state,
@@ -62,11 +66,11 @@ router.post('/signup/user', async (req, res) => {
 
     // Insert into Buyer table
     const insertBuyerStmt = db.prepare(`
-      INSERT INTO Buyer (userId, email, address)
-      VALUES (?, ?, ?)
+      INSERT INTO Buyer (userId, email, address, phoneNumber)
+      VALUES (?, ?, ?, ?)
     `);
 
-    await insertBuyerStmt.run(userId, email, address);
+    await insertBuyerStmt.run(userId, email, address, phoneNumber);
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -74,6 +78,7 @@ router.post('/signup/user', async (req, res) => {
     res.status(500).json({ error: 'Failed to register user' });
   }
 });
+
 
 router.post('/signup/seller', async (req, res) => {
   const {
