@@ -23,8 +23,8 @@ import itemRoute from "./routes/itemRoute.js";
 import userRoute from "./routes/userRoute.js";
 import orderRoute from "./routes/orderRoute.js";
 import reviewRoute from "./routes/reviewRoute.js";
-
-const PORT = 5174;
+import productRoute from "./routes/productRoute.js";
+const PORT = 80;
 const app = express();
 
 
@@ -56,6 +56,7 @@ app.use("/", itemRoute);
 app.use("/users", userRoute);
 app.use ("/order", orderRoute);
 app.use ("/items", reviewRoute);
+app.use ("/products", productRoute);
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 app.get("/books", authorize(['see_item', 'chat']), (req, res) => res.json({ name: 'harry potter' }));
 

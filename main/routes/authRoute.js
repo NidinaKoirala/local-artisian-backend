@@ -7,7 +7,146 @@ const router = express.Router();
 
 router.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
-router.post("/sign-up", async (req, res, next) => {
+router.post('/signup/user', async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+    address,
+    city,
+    state,
+    postalCode,
+    country,
+  } = req.body;
+
+  if (
+    !firstName ||
+    !lastName ||
+    !username ||
+    !email ||
+    !password ||
+    !address ||
+    !city ||
+    !state ||
+    !postalCode ||
+    !country
+  ) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert into User table
+    const insertUserStmt = db.prepare(`
+      INSERT INTO User (firstName, lastName, username, email, password, addressLine1, city, state, postalCode, country, role)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')
+    `);
+
+    const userResult = await insertUserStmt.run(
+      firstName,
+      lastName,
+      username,
+      email,
+      hashedPassword,
+      address,
+      city,
+      state,
+      postalCode,
+      country
+    );
+
+    const userId = userResult.lastInsertRowid;
+
+    // Insert into Buyer table
+    const insertBuyerStmt = db.prepare(`
+      INSERT INTO Buyer (userId, email, address)
+      VALUES (?, ?, ?)
+    `);
+
+    await insertBuyerStmt.run(userId, email, address);
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    console.error('Error during signup as buyer:', error);
+    res.status(500).json({ error: 'Failed to register user' });
+  }
+});
+
+router.post('/signup/seller', async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+    shopName,
+    address,
+    city,
+    state,
+    postalCode,
+    country,
+  } = req.body;
+
+  if (
+    !firstName ||
+    !lastName ||
+    !username ||
+    !email ||
+    !password ||
+    !shopName ||
+    !address ||
+    !city ||
+    !state ||
+    !postalCode ||
+    !country
+  ) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert into User table
+    const insertUserStmt = db.prepare(`
+      INSERT INTO User (firstName, lastName, username, email, password, addressLine1, city, state, postalCode, country, role)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seller')
+    `);
+
+    const userResult = await insertUserStmt.run(
+      firstName,
+      lastName,
+      username,
+      email,
+      hashedPassword,
+      address,
+      city,
+      state,
+      postalCode,
+      country
+    );
+
+    const userId = userResult.lastInsertRowid;
+
+    // Insert into Seller table
+    const insertSellerStmt = db.prepare(`
+      INSERT INTO Seller (userId, email, shopName, address)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    await insertSellerStmt.run(userId, email, shopName, address);
+
+    res.status(201).json({ message: 'Seller registered successfully' });
+  } catch (error) {
+    console.error('Error during signup as seller:', error);
+    res.status(500).json({ error: 'Failed to register seller' });
+  }
+});
+
+
+router.post('/sign-up-seller', async (req, res) => {
   const {
     firstName,
     middleName,
@@ -15,14 +154,11 @@ router.post("/sign-up", async (req, res, next) => {
     username,
     email,
     password,
-    phoneNumber,
-    addressLine1,
-    addressLine2,
-    city,
-    state,
-    postalCode,
-    country,
+    shopName,
+    shopAddress,
   } = req.body;
+
+  console.log('Received seller signup request:', req.body);
 
   // Validate required fields
   if (
@@ -31,79 +167,68 @@ router.post("/sign-up", async (req, res, next) => {
     !username ||
     !email ||
     !password ||
-    !addressLine1 ||
-    !city ||
-    !state ||
-    !postalCode ||
-    !country
+    !shopName ||
+    !shopAddress
   ) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  // Ensure email and username are strings
-  if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string") {
-    return res.status(400).json({ error: "Invalid input types" });
+    console.error('Missing required fields:', req.body);
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Prepare data for insertion
-    const userData = {
+    // Start transaction
+    await db.run('BEGIN');
+    console.log('Transaction started.');
+
+    // Insert into User table
+    console.log('Inserting into User table...');
+    const insertUserStmt = db.prepare(`
+      INSERT INTO User (
+        firstName, middleName, lastName, username, email, password, role
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    const userResult = await insertUserStmt.run(
       firstName,
-      middleName: middleName || null, // Optional field
+      middleName || null,
       lastName,
       username,
       email,
-      password: hashedPassword,
-      phoneNumber: phoneNumber || null, // Optional field
-      addressLine1,
-      addressLine2: addressLine2 || null, // Optional field
-      city,
-      state,
-      postalCode,
-      country,
-    };
+      hashedPassword,
+      'seller'
+    );
+    const newUserId = userResult.lastInsertRowid; // Get the newly inserted user's ID
+    console.log('User inserted with ID:', newUserId);
 
-    console.log("Inserting user with values:", userData);
+    // Insert into Seller table
+    console.log('Inserting into Seller table...');
+    const insertSellerStmt = db.prepare(`
+      INSERT INTO Seller (userId, email, shopName, address)
+      VALUES (?, ?, ?, ?)
+    `);
+    await insertSellerStmt.run(newUserId, email, shopName, shopAddress);
+    console.log('Seller inserted successfully.');
 
-    // Insert user data using Turso client with `prepare().run()`
+    // Commit transaction
+    await db.run('COMMIT');
+    console.log('Transaction committed.');
+
+    res.status(201).json({ message: 'Seller account created successfully' });
+  } catch (error) {
+    console.error('Error during seller signup:', error);
+
+    // Rollback transaction in case of error
     try {
-      const insertUserStmt = db.prepare(`
-        INSERT INTO User (
-          firstName, middleName, lastName, username, email, password, phoneNumber, 
-          addressLine1, addressLine2, city, state, postalCode, country
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      await insertUserStmt.run(
-        userData.firstName,
-        userData.middleName,
-        userData.lastName,
-        userData.username,
-        userData.email,
-        userData.password,
-        userData.phoneNumber,
-        userData.addressLine1,
-        userData.addressLine2,
-        userData.city,
-        userData.state,
-        userData.postalCode,
-        userData.country
-      );
-
-      console.log("User registered successfully");
-      res.status(201).json({ message: "User registered successfully" });
-    } catch (err) {
-      console.error("Database insertion error:", err);
-      return res.status(500).json({ error: "Error inserting user into database" });
+      console.log('Rolling back transaction...');
+      await db.run('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Error during rollback:', rollbackError);
     }
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    return next(err);
+
+    res.status(500).json({ error: 'Failed to create seller account' });
   }
 });
-
 router.post("/log-in", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
