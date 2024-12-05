@@ -220,6 +220,12 @@ router.get("/forsellers", async (req, res) => {
         o.quantity,
         u.firstName || ' ' || u.lastName AS customerName,
         u.phoneNumber AS customerPhone,
+        u.addressLine1 || ', ' || 
+        IFNULL(u.addressLine2 || ', ', '') || 
+        u.city || ', ' || 
+        u.state || ', ' || 
+        u.postalCode || ', ' || 
+        u.country AS customerAddress,
         i.title AS itemName,
         i.price AS itemPrice,
         o.quantity * i.price AS totalPrice
