@@ -44,18 +44,6 @@ router.post("/reviews", async (req, res) => {
     `;
     await dbClient.execute(insertReviewQuery, [userId, itemId, rating, comment]);
 
-    // Update the item's average rating
-    const updateRatingQuery = `
-      UPDATE Item
-      SET rating = (
-        SELECT AVG(rating) 
-        FROM Ratings 
-        WHERE itemId = ?
-      )
-      WHERE id = ?
-    `;
-    await dbClient.execute(updateRatingQuery, [itemId, itemId]);
-
     res.status(201).json({
       message: "Review submitted successfully!",
     });
