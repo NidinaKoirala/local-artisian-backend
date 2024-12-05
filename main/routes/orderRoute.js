@@ -251,4 +251,75 @@ router.get("/forsellers", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch orders. Please try again later." });
   }
 });
+router.put("/status", async (req, res) => {
+  const { orderId, status } = req.body;
+
+  if (!orderId || !status) {
+    return res.status(400).json({ error: "Order ID and status are required." });
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE orders
+      SET status = ?
+      WHERE id = ?
+    `;
+
+    const result = await dbClient.execute(updateQuery, [status, orderId]);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: "Order not found or status unchanged." });
+    }
+
+    res.status(200).json({ message: "Order status updated successfully." });
+  } catch (error) {
+    console.error("Error updating order status:", error.message);
+    res.status(500).json({ error: "Failed to update order status." });
+  }
+});
+// GET route to fetch the order status
+router.get("/status", async (req, res) => {
+  const { orderId } = req.query;
+
+  if (!orderId) {
+    return res.status(400).json({ error: "Order ID is required." });
+  }
+
+  try {
+    const selectQuery = `
+      SELECT status
+      FROM orders
+      WHERE id = ?
+    `;
+
+    // Execute query and directly access the `rows` property
+    const result = await dbClient.execute(selectQuery, [orderId]);
+
+    // Log the result to ensure we're accessing it correctly
+    console.log("Query Result:", result);
+
+    // Extract the status from the rows
+    const rows = result.rows;
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    // Access the status field
+    const status = rows[0].status;
+    if (!status) {
+      return res.status(404).json({ error: "Status not found for the specified order." });
+    }
+
+    // Return only the status
+    res.status(200).json({ status });
+  } catch (error) {
+    console.error("Error fetching order status:", error.message);
+    res.status(500).json({ error: "Failed to fetch order status.", details: error.message });
+  }
+});
+
+
+
+
 export default router;
