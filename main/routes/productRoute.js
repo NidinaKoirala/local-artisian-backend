@@ -52,6 +52,87 @@ router.post('/add', async (req, res) => {
     res.status(500).json({ error: 'Failed to add product' });
   }
 });
+router.put('/edit/:id', async (req, res) => {
+  const { id } = req.params; // Product ID from the URL
+  const { title, price, description, category, inStock, imageUrl, sellerId } = req.body;
+
+  console.log('Received request to edit product:', req.body);
+
+  if (!sellerId) {
+    console.error('Missing required field: sellerId');
+    return res.status(400).json({ error: 'Missing required field: sellerId' });
+  }
+
+  try {
+    // Fetch the existing product to ensure it exists
+    const existingProductStmt = db.prepare(`
+      SELECT id FROM Item WHERE id = ?
+    `);
+    const existingProduct = await existingProductStmt.get(id);
+
+    if (!existingProduct) {
+      console.error(`Product with ID ${id} not found`);
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Dynamically build the update query
+    const updates = [];
+    const updateValues = [];
+
+    if (title !== undefined) {
+      updates.push('title = ?');
+      updateValues.push(title);
+    }
+    if (price !== undefined) {
+      updates.push('price = ?');
+      updateValues.push(price);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      updateValues.push(description);
+    }
+    if (category !== undefined) {
+      updates.push('category = ?');
+      updateValues.push(category);
+    }
+    if (inStock !== undefined) {
+      updates.push('inStock = ?');
+      updateValues.push(parseInt(inStock, 10)); // Ensure it's a number
+    }
+
+    if (updates.length > 0) {
+      const updateQuery = `
+        UPDATE Item
+        SET ${updates.join(', ')}
+        WHERE id = ?
+      `;
+      updateValues.push(id);
+
+      console.log('Executing update query:', updateQuery, updateValues);
+      const updateProductStmt = db.prepare(updateQuery);
+      await updateProductStmt.run(...updateValues);
+    }
+
+    // Update the photo if a new `imageUrl` is provided
+    if (imageUrl) {
+      console.log('Updating photo for product:', { imageUrl, id });
+      const updatePhotoStmt = db.prepare(`
+        UPDATE Photo
+        SET url = ?
+        WHERE itemId = ?
+      `);
+      await updatePhotoStmt.run(imageUrl, id);
+    }
+
+    console.log('Product updated successfully');
+    res.status(200).json({ message: 'Product updated successfully' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
 router.get('/seller-details', async (req, res) => {
   const { userId } = req.query;
 
