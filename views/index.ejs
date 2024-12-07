@@ -3,19 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <title>Server Status</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .status {
+      font-weight: bold;
+      color: green;
+    }
+
+    .error {
+      font-weight: bold;
+      color: red;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
   <script>
-    // Function to fetch server status
     async function fetchServerStatus() {
+      const statusElement = document.getElementById('server-status');
       try {
-        const response = await fetch('/api/status');
+        const response = await fetch('/api/status'); // Call the server status endpoint
         if (response.ok) {
           const data = await response.json();
-          document.getElementById('server-status').innerText = `Server Status: ${data.status}`;
+          statusElement.innerText = `Server Status: ${data.status}`;
+          statusElement.className = data.status === 'Running' ? 'status' : 'error';
         } else {
-          document.getElementById('server-status').innerText = 'Server Status: Error Fetching Status';
+          statusElement.innerText = 'Server Status: Error Fetching Status';
+          statusElement.className = 'error';
         }
       } catch (error) {
-        document.getElementById('server-status').innerText = 'Server Status: Error Fetching Status';
+        console.error('Error fetching server status:', error);
+        statusElement.innerText = 'Server Status: Error Fetching Status';
+        statusElement.className = 'error';
       }
     }
 
@@ -25,17 +55,20 @@
 </head>
 <body>
   <h1 id="server-status">Server Status: Loading...</h1>
-  
+
   <% if (user) { %>
-    <h1>Welcome Back, <%= user.username %>!</h1>
-    <h3>User Details: <%= JSON.stringify(user) %></h3>
-    
-    <!-- Logout Form -->
+    <h2>Welcome Back, <%= user.username %>!</h2>
+    <p>User Details: <%= JSON.stringify(user) %></p>
     <form action="/auth/log-out" method="POST" style="display: inline;">
-        <button type="submit">Log Out</button>
+      <button type="submit">Log Out</button>
     </form>
   <% } else { %>
-    <h1>Welcome to our site!</h1>
+    <h2>Welcome to our site!</h2>
+    <p>Please enjoy exploring our platform.</p>
   <% } %>
+
+  <footer>
+    &copy; 2024 Nepali Hasta Kala. All rights reserved.
+  </footer>
 </body>
 </html>

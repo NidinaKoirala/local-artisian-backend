@@ -49,7 +49,7 @@ app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Routes
+// API to check server status
 app.get('/api/status', (req, res) => {
   res.json({
     status: serverStatus ? 'Running' : 'Not Running',
