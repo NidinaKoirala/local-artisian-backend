@@ -2,31 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title></title>
+  <title>Server Status</title>
+  <script>
+    // Function to fetch server status
+    async function fetchServerStatus() {
+      try {
+        const response = await fetch('/api/status');
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('server-status').innerText = `Server Status: ${data.status}`;
+        } else {
+          document.getElementById('server-status').innerText = 'Server Status: Error Fetching Status';
+        }
+      } catch (error) {
+        document.getElementById('server-status').innerText = 'Server Status: Error Fetching Status';
+      }
+    }
+
+    // Fetch the status when the page loads
+    window.onload = fetchServerStatus;
+  </script>
 </head>
 <body>
+  <h1 id="server-status">Server Status: Loading...</h1>
+  
   <% if (user) { %>
-    <h1>WELCOME BACK <%= user.username %></h1>
-    <h3><%= JSON.stringify(req.user) %></h3>
+    <h1>Welcome Back, <%= user.username %>!</h1>
+    <h3>User Details: <%= JSON.stringify(user) %></h3>
     
     <!-- Logout Form -->
     <form action="/auth/log-out" method="POST" style="display: inline;">
-        <button type="submit">LOG OUT</button>
+        <button type="submit">Log Out</button>
     </form>
-    
-<% } else { %>
-    <h1>Please log in</h1>
-    <form action="/auth/log-in" method="POST">
-        <label for="email">Email</label>
-        <input id="email" name="email" placeholder="email@example.com" type="email" required />
-        
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" required />
-        
-        <button>Log In</button>
-        <a href="/auth/sign-up">Sign Up</a>
-    </form>
-<% } %>
-
+  <% } else { %>
+    <h1>Welcome to our site!</h1>
+  <% } %>
 </body>
 </html>

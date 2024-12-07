@@ -50,6 +50,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Routes
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: serverStatus ? 'Running' : 'Not Running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/auth", authRoute);
 app.use("/admin", adminRoute);
 app.use("/", itemRoute);
