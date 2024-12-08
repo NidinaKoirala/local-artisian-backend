@@ -4,13 +4,13 @@ import db from '../../prisma/database.js';
 const router = express.Router();
 
 router.post('/add', async (req, res) => {
-  const { title, price, description, category, stock, imageUrl, sellerId } = req.body;
+  const { title, price, description, category, stock, imageUrls, sellerId } = req.body;
 
   console.log('Received request to add product:', req.body);
 
-  if (!title || !price || !description || !category || !stock || !sellerId || !imageUrl) {
-    console.error('Missing required fields:', { title, price, description, category, stock, sellerId, imageUrl });
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!title || !price || !description || !category || !stock || !sellerId || !imageUrls || !Array.isArray(imageUrls)) {
+    console.error('Missing required fields:', { title, price, description, category, stock, sellerId, imageUrls });
+    return res.status(400).json({ error: 'Missing required fields or invalid imageUrls' });
   }
 
   try {
@@ -37,24 +37,27 @@ router.post('/add', async (req, res) => {
     const newItemId = Number(result.lastInsertRowid); // Convert BigInt to Number
     console.log('Product inserted successfully with ID:', newItemId);
 
-    // Insert the photo URL into the Photo table
-    console.log('Inserting photo into Photo table:', { imageUrl, itemId: newItemId });
+    // Insert each photo URL into the Photo table
+    console.log('Inserting photos into Photo table:', { imageUrls, itemId: newItemId });
     const insertPhotoStmt = db.prepare(`
       INSERT INTO Photo (url, itemId)
       VALUES (?, ?)
     `);
-    await insertPhotoStmt.run(imageUrl, newItemId);
 
-    console.log('Product and photo added successfully');
-    res.status(201).json({ message: 'Product and photo added successfully' });
+    const photoInsertPromises = imageUrls.map((url) => insertPhotoStmt.run(url, newItemId));
+    await Promise.all(photoInsertPromises);
+
+    console.log('Product and photos added successfully');
+    res.status(201).json({ message: 'Product and photos added successfully' });
   } catch (error) {
     console.error('Error adding product:', error);
     res.status(500).json({ error: 'Failed to add product' });
   }
 });
+
 router.put('/edit/:id', async (req, res) => {
   const { id } = req.params; // Product ID from the URL
-  const { title, price, description, category, inStock, imageUrl, sellerId } = req.body;
+  const { title, price, description, category, inStock, imageUrls, sellerId } = req.body;
 
   console.log('Received request to edit product:', req.body);
 
@@ -113,25 +116,47 @@ router.put('/edit/:id', async (req, res) => {
       await updateProductStmt.run(...updateValues);
     }
 
-    // Update the photo if a new `imageUrl` is provided
-    if (imageUrl) {
-      console.log('Updating photo for product:', { imageUrl, id });
-      const updatePhotoStmt = db.prepare(`
-        UPDATE Photo
-        SET url = ?
-        WHERE itemId = ?
+    // Add new image URLs without replacing existing ones
+    if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
+      console.log('Adding new photos for product:', { imageUrls, id });
+
+      // Insert only new image URLs into the Photo table
+      const insertPhotoStmt = db.prepare(`
+        INSERT INTO Photo (url, itemId)
+        VALUES (?, ?)
       `);
-      await updatePhotoStmt.run(imageUrl, id);
+
+      const existingPhotosStmt = db.prepare(`
+        SELECT url FROM Photo WHERE itemId = ?
+      `);
+      const existingPhotos = await existingPhotosStmt.all(id);
+      const existingUrls = existingPhotos.map((photo) => photo.url);
+
+      const newUrls = imageUrls.filter((url) => url.trim() !== '' && !existingUrls.includes(url));
+
+      const insertPhotoPromises = newUrls.map((url) => insertPhotoStmt.run(url, id));
+      await Promise.all(insertPhotoPromises);
     }
 
+    // Fetch updated image URLs to send back as a response
+    const updatedPhotosStmt = db.prepare(`
+      SELECT url FROM Photo WHERE itemId = ?
+    `);
+    const updatedPhotos = await updatedPhotosStmt.all(id);
+
     console.log('Product updated successfully');
-    res.status(200).json({ message: 'Product updated successfully' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    res.status(200).json({ 
+      message: 'Product updated successfully', 
+      updatedPhotos 
+    });
   } catch (error) {
     console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product' });
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Failed to update product' });
+    }
   }
 });
+
 
 router.get('/seller-details', async (req, res) => {
   const { userId } = req.query;
