@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import db from "../../prisma/database.js"; // Points to Turso client setup
 import passport from "../../passport/passportConfig.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -234,6 +235,77 @@ router.post('/sign-up-seller', async (req, res) => {
     res.status(500).json({ error: 'Failed to create seller account' });
   }
 });
+router.post('/signup/admin', async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+    phoneNumber,
+    address,
+    city,
+    state,
+    postalCode,
+    country,
+  } = req.body;
+
+  // Validate required fields
+  if (
+    !firstName ||
+    !lastName ||
+    !username ||
+    !email ||
+    !password ||
+    !phoneNumber ||
+    !address ||
+    !city ||
+    !state ||
+    !postalCode ||
+    !country
+  ) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert into User table with role 'admin'
+    const insertUserStmt = db.prepare(`
+      INSERT INTO User (firstName, lastName, username, email, password, phoneNumber, addressLine1, city, state, postalCode, country, role)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'admin')
+    `);
+
+    const userResult = await insertUserStmt.run(
+      firstName,
+      lastName,
+      username,
+      email,
+      hashedPassword,
+      phoneNumber,
+      address,
+      city,
+      state,
+      postalCode,
+      country
+    );
+
+    const userId = userResult.lastInsertRowid;
+
+    // Insert into Admin table
+    const insertAdminStmt = db.prepare(`
+      INSERT INTO Admin (userId, email)
+      VALUES (?, ?)
+    `);
+
+    await insertAdminStmt.run(userId, email);
+
+    res.status(201).json({ message: 'Admin registered successfully' });
+  } catch (error) {
+    console.error('Error during admin signup:', error);
+    res.status(500).json({ error: 'Failed to register admin' });
+  }
+});
 router.post("/log-in", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
@@ -246,7 +318,21 @@ router.post("/log-in", (req, res, next) => {
       if (loginErr) {
         return res.status(500).json({ error: "Login failed" });
       }
-      return res.status(200).json({ message: "Login successful", user });
+
+      // Generate JWT token
+      const payload = { id: user.id, role: user.role, email: user.email };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+      return res.status(200).json({
+        message: "Login successful",
+        user: {
+          id: user.id,
+          fullName: `${user.firstName} ${user.lastName}`,
+          role: user.role,
+          email: user.email,
+        },
+        token, // Include the token in the response
+      });
     });
   })(req, res, next);
 });

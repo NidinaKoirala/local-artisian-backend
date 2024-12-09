@@ -28,7 +28,7 @@ import productRoute from "./routes/productRoute.js";
 import sellersRouter from"./routes/admin/sellers.js";
 import productsRouter from "./routes/admin/products.js";
 import manageUsersRouter from "./routes/admin/users.js";
-const PORT = 5174;
+const PORT = 80;
 const app = express();
 
 

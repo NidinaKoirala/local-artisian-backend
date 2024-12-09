@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { config } from "dotenv";
 import db from "../../../prisma/database.js";
+import { authenticate, authorizeAdmin } from "../../middleware/authMiddleware.js"; // Adjust the path to your middleware file
 
 config(); // Load environment variables
 
 const router = Router();
 
 // Fetch all users with details
-router.get("/", async (req, res) => {
+router.get("/", authenticate, authorizeAdmin ,async (req, res) => {
   try {
     const query = `
       SELECT 
