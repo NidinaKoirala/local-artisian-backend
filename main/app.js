@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { authenticate, authorizeAdmin } from './middleware/authMiddleware.js';
 
 // Define __filename and __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -67,9 +68,12 @@ app.use("/users", userRoute);
 app.use ("/order", orderRoute);
 app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
-app.use("/admin/sellers", sellersRouter);
-app.use("/admin/products", productsRouter);
-app.use ("/admin/users", manageUsersRouter);
+// Protected Admin Routes
+app.use("/admin", authenticate, authorizeAdmin, adminRoute);
+app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
+app.use("/admin/products", authenticate, authorizeAdmin, productsRouter);
+app.use("/admin/users", authenticate, authorizeAdmin, manageUsersRouter);
+
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}`));
