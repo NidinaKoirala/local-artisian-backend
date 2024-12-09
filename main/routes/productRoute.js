@@ -54,6 +54,44 @@ router.post('/add', async (req, res) => {
     res.status(500).json({ error: 'Failed to add product' });
   }
 });
+router.delete('/delete/:id', async (req, res) => {
+  const { id } = req.params;
+
+  console.log('Received request to delete product:', id);
+
+  if (!id) {
+    console.error('Missing required product ID');
+    return res.status(400).json({ error: 'Missing required product ID' });
+  }
+
+  try {
+    // Validate if the product exists in the Item table
+    console.log('Checking if product exists with ID:', id);
+    const productCheckStmt = db.prepare('SELECT id FROM Item WHERE id = ?');
+    const product = await productCheckStmt.get(id);
+
+    if (!product) {
+      console.error(`Product with ID ${id} does not exist`);
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Delete associated photos from the Photo table
+    console.log('Deleting photos associated with product ID:', id);
+    const deletePhotosStmt = db.prepare('DELETE FROM Photo WHERE itemId = ?');
+    await deletePhotosStmt.run(id);
+
+    // Delete the product from the Item table
+    console.log('Deleting product from Item table with ID:', id);
+    const deleteProductStmt = db.prepare('DELETE FROM Item WHERE id = ?');
+    await deleteProductStmt.run(id);
+
+    console.log('Product deleted successfully');
+    res.status(200).json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
 
 router.put('/edit/:id', async (req, res) => {
   const { id } = req.params; // Product ID from the URL
