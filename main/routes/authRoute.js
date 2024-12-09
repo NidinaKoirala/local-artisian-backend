@@ -323,16 +323,7 @@ router.post("/log-in", (req, res, next) => {
       const payload = { id: user.id, role: user.role, email: user.email };
       const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-      return res.status(200).json({
-        message: "Login successful",
-        user: {
-          id: user.id,
-          fullName: `${user.firstName} ${user.lastName}`,
-          role: user.role,
-          email: user.email,
-        },
-        token, // Include the token in the response
-      });
+      return res.status(200).json({ message: "Login successful", user,token });
     });
   })(req, res, next);
 });
