@@ -11,7 +11,7 @@ const dbClient = createClient({
 
 const router = Router();
 
-// Route to get all items with their associated photos
+// Route to get all items with their associated photos and seller's shop name
 router.get("/items", async (req, res) => {
   try {
     const query = `
@@ -20,18 +20,34 @@ router.get("/items", async (req, res) => {
         photo.url AS photoUrl,
         item.soldQuantity,
         item.discount,
-        IFNULL(AVG(Ratings.rating), 0) AS averageRating
+        IFNULL(AVG(Ratings.rating), 0) AS averageRating,
+        Seller.shopName AS shopName
       FROM item
       LEFT JOIN photo ON item.id = photo.itemId
       LEFT JOIN Ratings ON item.id = Ratings.itemId
-      GROUP BY item.id, photo.url
+      LEFT JOIN Seller ON item.sellerId = Seller.id
+      GROUP BY item.id, photo.url, Seller.shopName
       ORDER BY item.soldQuantity DESC
     `;
     const result = await dbClient.execute(query);
 
     const itemsMap = {};
     result.rows.forEach((row) => {
-      const { id, title, description, price, averageRating, category, inStock, soldQuantity, discount, sellerId, adminId, photoUrl } = row;
+      const {
+        id,
+        title,
+        description,
+        price,
+        averageRating,
+        category,
+        inStock,
+        soldQuantity,
+        discount,
+        sellerId,
+        adminId,
+        shopName,
+        photoUrl,
+      } = row;
 
       if (!itemsMap[id]) {
         itemsMap[id] = {
@@ -43,9 +59,10 @@ router.get("/items", async (req, res) => {
           category,
           inStock,
           soldQuantity,
+          discount,
           sellerId,
           adminId,
-          discount,
+          shopName, // Include shop name
           photos: [],
         };
       }
@@ -91,7 +108,7 @@ router.get("/categories/:category", async (req, res) => {
 });
 
 // Route to get a single item by ID with its associated photos
-// Route to get a single item by ID with its associated photos and average rating
+// Route to get a single item by ID with its associated photos, average rating, and seller's shop name
 router.get("/items/:id", async (req, res) => {
   const id = Number(req.params.id);
 
@@ -100,12 +117,14 @@ router.get("/items/:id", async (req, res) => {
       SELECT 
         item.*,
         photo.url AS photoUrl,
-        IFNULL(AVG(Ratings.rating), 0) AS averageRating
+        IFNULL(AVG(Ratings.rating), 0) AS averageRating,
+        Seller.shopName AS shopName
       FROM item
       LEFT JOIN photo ON item.id = photo.itemId
       LEFT JOIN Ratings ON item.id = Ratings.itemId
+      LEFT JOIN Seller ON item.sellerId = Seller.id
       WHERE item.id = ?
-      GROUP BY item.id, photo.url
+      GROUP BY item.id, photo.url, Seller.shopName
     `;
 
     const result = await dbClient.execute(query, [id]);
@@ -124,6 +143,7 @@ router.get("/items/:id", async (req, res) => {
       inStock: result.rows[0].inStock,
       sellerId: result.rows[0].sellerId,
       adminId: result.rows[0].adminId,
+      shopName: result.rows[0].shopName, // Include shop name
       photos: result.rows.map(row => (row.photoUrl ? { url: row.photoUrl } : null)).filter(photo => photo),
     };
 
@@ -133,6 +153,7 @@ router.get("/items/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch item" });
   }
 });
+
 
 
 // New Route: Get User Details
@@ -229,5 +250,77 @@ router.post("/rate-item", async (req, res) => {
     res.status(500).json({ error: "Failed to submit rating" });
   }
 });
+// Route to get all products by a specific seller
+router.get('/sellers/:sellerId/products', async (req, res) => {
+  const sellerId = Number(req.params.sellerId);
 
+  try {
+    const query = `
+      SELECT 
+        item.id,
+        item.title,
+        item.description,
+        item.price,
+        item.category,
+        item.inStock,
+        item.soldQuantity,
+        item.discount,
+        Seller.shopName,
+        Photo.url AS photoUrl
+      FROM Item
+      INNER JOIN Seller ON Item.sellerId = Seller.id
+      LEFT JOIN Photo ON Item.id = Photo.itemId
+      WHERE Seller.id = ?
+      GROUP BY Item.id, Photo.url
+    `;
+
+    const result = await dbClient.execute(query, [sellerId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No products found for this seller' });
+    }
+
+    // Map results to format with photos grouped under each product
+    const productsMap = {};
+    result.rows.forEach((row) => {
+      const {
+        id,
+        title,
+        description,
+        price,
+        category,
+        inStock,
+        soldQuantity,
+        discount,
+        shopName,
+        photoUrl,
+      } = row;
+
+      if (!productsMap[id]) {
+        productsMap[id] = {
+          id,
+          title,
+          description,
+          price,
+          category,
+          inStock,
+          soldQuantity,
+          discount,
+          shopName,
+          photos: [],
+        };
+      }
+
+      if (photoUrl) {
+        productsMap[id].photos.push({ url: photoUrl });
+      }
+    });
+
+    const products = Object.values(productsMap);
+    res.json({ products });
+  } catch (error) {
+    console.error('Error fetching seller products', error);
+    res.status(500).json({ error: 'Failed to fetch seller products' });
+  }
+});
 export default router;
