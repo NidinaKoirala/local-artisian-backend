@@ -1,15 +1,17 @@
 import { Router } from "express";
 import { config } from "dotenv";
 import db from "../../../prisma/database.js";
-import { authenticate, authorizeAdmin } from "../../middleware/authMiddleware.js"; // Adjust the path to your middleware file
+import { authenticate, authorizeAdmin } from "../../middleware/authMiddleware.js";
 
 config(); // Load environment variables
 
 const router = Router();
 
-// Fetch all orders grouped by sellers or buyers
+// Fetch all orders grouped by sellers or buyers with pagination
 router.get('/', authenticate, authorizeAdmin, async (req, res) => {
-  const { groupBy } = req.query; // groupBy can be 'seller' or 'buyer'
+  const { groupBy, page = 1, limit = 20 } = req.query; // Default page 1, limit 20
+
+  const offset = (page - 1) * limit; // Calculate offset for pagination
 
   try {
     let query = `
@@ -31,8 +33,28 @@ router.get('/', authenticate, authorizeAdmin, async (req, res) => {
       query += ' ORDER BY o.id DESC'; // Default sorting by order ID
     }
 
+    // Add LIMIT and OFFSET for pagination
+    query += ` LIMIT ${limit} OFFSET ${offset}`;
+
     const orders = await db.prepare(query).all();
-    res.json(orders);
+
+    // Count total orders for pagination metadata
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM Orders o
+      JOIN User u ON o.userId = u.id
+      JOIN Item i ON o.itemId = i.id
+      JOIN Seller s ON i.sellerId = s.id
+    `;
+
+    const totalResult = await db.prepare(countQuery).get();
+    const totalOrders = totalResult.total || 0;
+
+    res.json({
+      orders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: Number(page),
+    });
   } catch (error) {
     console.error('Failed to fetch orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
