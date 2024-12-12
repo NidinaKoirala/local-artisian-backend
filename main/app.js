@@ -28,7 +28,9 @@ import productRoute from "./routes/productRoute.js";
 import sellersRouter from"./routes/admin/sellers.js";
 import productsRouter from "./routes/admin/products.js";
 import manageUsersRouter from "./routes/admin/users.js";
-const PORT = 80;
+import manageOrdersRouter from "./routes/admin/orders.js";
+
+const PORT = 5174;
 const app = express();
 
 
@@ -73,7 +75,7 @@ app.use("/admin", authenticate, authorizeAdmin, adminRoute);
 app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
 app.use("/admin/products", authenticate, authorizeAdmin, productsRouter);
 app.use("/admin/users", authenticate, authorizeAdmin, manageUsersRouter);
-
+app.use("/admin/orders", authenticate, authorizeAdmin, manageOrdersRouter);
 app.get("/", (req, res) => res.render("index", { user: req.user, req: req }));
 
 app.listen(PORT, () => console.log(`App listening on port ${PORT}`));
