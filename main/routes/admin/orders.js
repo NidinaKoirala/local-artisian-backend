@@ -8,7 +8,7 @@ config(); // Load environment variables
 const router = Router();
 
 // Fetch all orders grouped by sellers or buyers
-router.get('/', authenticate, authorizeAdmin , async (req, res) => {
+router.get('/', authenticate, authorizeAdmin, async (req, res) => {
   const { groupBy } = req.query; // groupBy can be 'seller' or 'buyer'
 
   try {
@@ -24,9 +24,11 @@ router.get('/', authenticate, authorizeAdmin , async (req, res) => {
     `;
 
     if (groupBy === 'seller') {
-      query += ' ORDER BY s.shopName';
+      query += ' ORDER BY s.shopName, o.id DESC';
     } else if (groupBy === 'buyer') {
-      query += ' ORDER BY u.firstName';
+      query += ' ORDER BY u.firstName, o.id DESC';
+    } else {
+      query += ' ORDER BY o.id DESC'; // Default sorting by order ID
     }
 
     const orders = await db.prepare(query).all();
@@ -38,7 +40,7 @@ router.get('/', authenticate, authorizeAdmin , async (req, res) => {
 });
 
 // Update order status
-router.put('/:id',  authenticate, authorizeAdmin ,  async (req, res) => {
+router.put('/:id', authenticate, authorizeAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -58,7 +60,7 @@ router.put('/:id',  authenticate, authorizeAdmin ,  async (req, res) => {
 });
 
 // Delete an order
-router.delete('/:id',  authenticate, authorizeAdmin ,  async (req, res) => {
+router.delete('/:id', authenticate, authorizeAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
