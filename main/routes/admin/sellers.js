@@ -75,18 +75,37 @@ router.delete("/:id", async (req, res) => {
   const sellerId = req.params.id;
 
   try {
-    const query = "DELETE FROM Seller WHERE id = ?";
-    const result = await db.prepare(query).run(sellerId);
+    // Check if the seller exists
+    const sellerQuery = "SELECT * FROM Seller WHERE id = ?";
+    const seller = await db.prepare(sellerQuery).get(sellerId);
 
-    if (result.changes === 0) {
+    if (!seller) {
       return res.status(404).json({ error: "Seller not found" });
     }
 
-    res.json({ message: "Seller deleted successfully" });
+    // Fetch the associated user
+    const userQuery = "SELECT * FROM User WHERE id = ?";
+    const user = await db.prepare(userQuery).get(seller.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "Associated user not found" });
+    }
+
+    // Delete the user (this will cascade to delete the seller due to foreign key constraints)
+    const deleteUserQuery = "DELETE FROM User WHERE id = ?";
+    const userDeleteResult = await db.prepare(deleteUserQuery).run(seller.userId);
+
+    if (userDeleteResult.changes === 0) {
+      return res.status(500).json({ error: "Failed to delete user" });
+    }
+
+    // Explicitly return success status and message
+    return res.status(200).json({ message: "Seller and associated user deleted successfully" });
   } catch (error) {
-    console.error("Error deleting seller:", error);
-    res.status(500).json({ error: "Failed to delete seller" });
+    console.error("Error deleting seller and associated user:", error);
+    return res.status(500).json({ error: "Failed to delete seller and associated user" });
   }
 });
+
 
 export default router;
