@@ -70,7 +70,7 @@ router.post("/place", async (req, res) => {
         }
         if (currentStock < quantity) {
           throw new Error(
-            `Insufficient stock for item ID ${id}. Available: ${currentStock}, Requested: ${quantity}`
+            `Insufficient stock for item. Please update item count. Available: ${currentStock}, Requested: ${quantity}`
           );
         }
       }
