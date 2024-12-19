@@ -29,8 +29,9 @@ import sellersRouter from"./routes/admin/sellers.js";
 import productsRouter from "./routes/admin/products.js";
 import manageUsersRouter from "./routes/admin/users.js";
 import manageOrdersRouter from "./routes/admin/orders.js";
+import managePayments from "./routes/paymentRoute.js";
 
-const PORT = 5174;
+const PORT = 80;
 const app = express();
 
 
@@ -70,6 +71,7 @@ app.use("/users", userRoute);
 app.use ("/order", orderRoute);
 app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
+app.use ("/create-payment-intent", managePayments);
 // Protected Admin Routes
 app.use("/admin", authenticate, authorizeAdmin, adminRoute);
 app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
