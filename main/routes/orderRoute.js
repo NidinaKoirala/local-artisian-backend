@@ -319,7 +319,53 @@ router.get("/status", async (req, res) => {
   }
 });
 
+router.get("/timeline", async (req, res) => {
+  const { orderId } = req.query;
 
+  if (!orderId) {
+    return res.status(400).json({ error: "Order ID is required." });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        o.id AS orderId, 
+        o.orderDate, 
+        o.status, 
+        i.title AS itemName, 
+        u.firstName || ' ' || u.lastName AS customerName, 
+        u.email AS customerEmail
+      FROM Orders o
+      JOIN Item i ON o.itemId = i.id
+      JOIN User u ON o.userId = u.id
+      WHERE o.id = ?
+    `;
+
+    const result = await dbClient.execute(query, [orderId]);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const order = result.rows[0];
+
+    // Create a timeline array based on the order status
+    const timeline = [
+      { date: order.orderDate, status: "Order Placed" },
+      ...(order.status === "Shipped" || order.status === "Delivered"
+        ? [{ date: new Date().toISOString(), status: "Order Shipped" }]
+        : []),
+      ...(order.status === "Delivered"
+        ? [{ date: new Date().toISOString(), status: "Order Delivered" }]
+        : []),
+    ];
+
+    res.status(200).json({ order, timeline });
+  } catch (error) {
+    console.error("Error fetching order timeline:", error.message);
+    res.status(500).json({ error: "Failed to fetch order timeline." });
+  }
+});
 
 
 export default router;
