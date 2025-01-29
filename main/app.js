@@ -64,7 +64,6 @@ app.get('/api/status', (req, res) => {
 });
 
 app.use("/auth", authRoute);
-app.use("/admin", adminRoute);
 app.use("/", itemRoute);
 app.use("/users", userRoute);
 app.use ("/order", orderRoute);
@@ -72,7 +71,6 @@ app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
 app.use ("/create-payment-intent", managePayments);
 // Protected Admin Routes
-app.use("/admin", authenticate, authorizeAdmin, adminRoute);
 app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
 app.use("/admin/products", authenticate, authorizeAdmin, productsRouter);
 app.use("/admin/users", authenticate, authorizeAdmin, manageUsersRouter);
