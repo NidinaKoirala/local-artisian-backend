@@ -19,7 +19,6 @@ import cors from "cors";
 import passport from "../passport/passportConfig.js";
 import authRoute from "./routes/authRoute.js";
 import itemRoute from "./routes/itemRoute.js";
-import userRoute from "./routes/userRoute.js";
 import orderRoute from "./routes/orderRoute.js";
 import reviewRoute from "./routes/reviewRoute.js";
 import productRoute from "./routes/productRoute.js";
