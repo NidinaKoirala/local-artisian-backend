@@ -64,7 +64,6 @@ app.get('/api/status', (req, res) => {
 
 app.use("/auth", authRoute);
 app.use("/", itemRoute);
-app.use("/users", userRoute);
 app.use ("/order", orderRoute);
 app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
