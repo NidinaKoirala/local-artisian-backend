@@ -18,7 +18,6 @@ import session from "express-session";
 import cors from "cors";
 import passport from "../passport/passportConfig.js";
 import authRoute from "./routes/authRoute.js";
-import adminRoute from "./routes/adminRoute.js";
 import itemRoute from "./routes/itemRoute.js";
 import userRoute from "./routes/userRoute.js";
 import orderRoute from "./routes/orderRoute.js";
