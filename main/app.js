@@ -17,7 +17,6 @@ import express from "express";
 import session from "express-session";
 import cors from "cors";
 import passport from "../passport/passportConfig.js";
-import authorize from "./rbac.js";
 import authRoute from "./routes/authRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import itemRoute from "./routes/itemRoute.js";
