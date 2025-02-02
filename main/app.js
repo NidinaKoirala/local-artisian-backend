@@ -28,6 +28,8 @@ import manageUsersRouter from "./routes/admin/users.js";
 import manageOrdersRouter from "./routes/admin/orders.js";
 import managePayments from "./routes/paymentRoute.js";
 import manageCategories from "./routes/admin/categories.js";
+import imageupload from "./routes/uploadImageRoute.js";
+
 
 const PORT = 5174;
 const app = express();
@@ -68,6 +70,8 @@ app.use ("/order", orderRoute);
 app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
 app.use ("/create-payment-intent", managePayments);
+app.use ("/upload", imageupload);
+
 // Protected Admin Routes
 app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
 app.use("/admin/products", authenticate, authorizeAdmin, productsRouter);
