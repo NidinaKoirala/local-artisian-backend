@@ -95,7 +95,7 @@ router.delete('/delete/:id', async (req, res) => {
 
 router.put('/edit/:id', async (req, res) => {
   const { id } = req.params; // Product ID from the URL
-  const { title, price, description, category, inStock, imageUrls, sellerId } = req.body;
+  const { title, price, description, category, inStock, imageUrls, sellerId, removedImages } = req.body;
 
   console.log('Received request to edit product:', req.body);
 
@@ -154,7 +154,16 @@ router.put('/edit/:id', async (req, res) => {
       await updateProductStmt.run(...updateValues);
     }
 
-    // Add new image URLs without replacing existing ones
+    // **REMOVE SELECTED IMAGES**
+    if (removedImages && Array.isArray(removedImages) && removedImages.length > 0) {
+      console.log('Removing selected images:', removedImages);
+      const deleteImagesStmt = db.prepare(`
+        DELETE FROM Photo WHERE url IN (${removedImages.map(() => '?').join(', ')}) AND itemId = ?
+      `);
+      await deleteImagesStmt.run(...removedImages, id);
+    }
+
+    // **ADD NEW IMAGES**
     if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
       console.log('Adding new photos for product:', { imageUrls, id });
 
@@ -194,7 +203,6 @@ router.put('/edit/:id', async (req, res) => {
     }
   }
 });
-
 
 router.get('/seller-details', async (req, res) => {
   const { userId } = req.query;
