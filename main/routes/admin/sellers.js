@@ -54,21 +54,65 @@ router.get("/:id/products", async (req, res) => {
 
   try {
     const query = `
-      SELECT * FROM Item 
-      WHERE sellerId = ?
+      SELECT 
+        item.*,
+        photo.url AS photoUrl
+      FROM item
+      LEFT JOIN photo ON item.id = photo.itemId
+      WHERE item.sellerId = ?
     `;
-    const products = await db.prepare(query).all(sellerId);
 
-    if (products.length === 0) {
+    const result = await db.prepare(query).all(sellerId);
+
+    if (result.length === 0) {
       return res.status(404).json({ error: "No products found for this seller" });
     }
 
-    res.json(products);
+    const itemsMap = {};
+    result.forEach((row) => {
+      const {
+        id,
+        title,
+        description,
+        price,
+        category,
+        inStock,
+        soldQuantity,
+        discount,
+        sellerId,
+        adminId,
+        photoUrl,
+      } = row;
+
+      if (!itemsMap[id]) {
+        itemsMap[id] = {
+          id,
+          title,
+          description,
+          price,
+          category,
+          inStock,
+          soldQuantity,
+          discount,
+          sellerId,
+          adminId,
+          photos: [],
+        };
+      }
+
+      if (photoUrl) {
+        itemsMap[id].photos.push({ url: photoUrl });
+      }
+    });
+
+    const items = Object.values(itemsMap);
+    res.json({ items });
   } catch (error) {
     console.error("Error fetching products for seller:", error);
     res.status(500).json({ error: "Failed to fetch products for seller" });
   }
 });
+
 
 // Delete seller by ID
 router.delete("/:id", async (req, res) => {
