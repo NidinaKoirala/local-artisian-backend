@@ -189,8 +189,9 @@ router.get("/history/:userId", async (req, res) => {
   });
 
 // API to fetch orders for a seller
+// API to fetch orders for a seller with pagination
 router.get("/forsellers", async (req, res) => {
-  const { userId } = req.query;
+  const { userId, page = 1, limit = 10 } = req.query;
 
   if (!userId) {
     return res.status(400).json({ error: "Missing userId" });
@@ -212,7 +213,10 @@ router.get("/forsellers", async (req, res) => {
     const sellerId = sellerResult.rows[0].id;
     console.info(`Mapped user ID ${userId} to seller ID ${sellerId}`);
 
-    // Fetch orders for the seller
+    // Calculate pagination offsets
+    const offset = (page - 1) * limit;
+
+    // Fetch orders for the seller with pagination
     const ordersQuery = `
       SELECT 
         o.id AS orderId,
@@ -234,10 +238,11 @@ router.get("/forsellers", async (req, res) => {
       JOIN User u ON o.userId = u.id
       WHERE i.sellerId = ?
       ORDER BY o.orderDate DESC
+      LIMIT ? OFFSET ?
     `;
 
-    console.info("Fetching orders for seller ID:", sellerId);
-    const ordersResult = await dbClient.execute(ordersQuery, [sellerId]);
+    console.info(`Fetching orders for seller ID: ${sellerId}, Page: ${page}, Limit: ${limit}`);
+    const ordersResult = await dbClient.execute(ordersQuery, [sellerId, parseInt(limit), parseInt(offset)]);
 
     if (!ordersResult.rows.length) {
       console.info(`No orders found for seller ID ${sellerId}`);
