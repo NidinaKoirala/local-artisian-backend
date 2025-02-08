@@ -29,6 +29,7 @@ import manageOrdersRouter from "./routes/admin/orders.js";
 import managePayments from "./routes/paymentRoute.js";
 import manageCategories from "./routes/admin/categories.js";
 import imageupload from "./routes/uploadImageRoute.js";
+import userroute from "./routes/userRoutes.js";
 
 
 const PORT = 5174;
@@ -71,6 +72,8 @@ app.use ("/items", reviewRoute);
 app.use ("/products", productRoute);
 app.use ("/create-payment-intent", managePayments);
 app.use ("/upload", imageupload);
+app.use ("/profile", userroute);
+
 
 // Protected Admin Routes
 app.use("/admin/sellers", authenticate, authorizeAdmin, sellersRouter);
